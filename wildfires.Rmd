@@ -15,7 +15,7 @@ library(ggthemes)
 
 ```{r}
 # create db connection
-conn <- dbConnect(SQLite(), 'database/FPA_FOD_20170508.sqlite')
+conn <- dbConnect(SQLite(), 'raw_data/FPA_FOD_20170508.sqlite')
 
 # pull the fires table into RAM
 fires <- tbl(conn, "Fires") %>% collect()
