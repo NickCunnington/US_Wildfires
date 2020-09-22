@@ -13,29 +13,34 @@ library(datasets)
 library(ggthemes)
 ```
 
+
+# 1.  Data Cleaning
+
+
+Creating connection to the sqlite database and downloading fires dataset
+
 ```{r}
-# create db connection
 conn <- dbConnect(SQLite(), 'raw_data/FPA_FOD_20170508.sqlite')
 
-# pull the fires table into RAM
 fires <- tbl(conn, "Fires") %>% collect()
+```
 
-# check size
-print(object.size(fires), units = 'Gb')
+```{r}
+# pulling all the names of the tables in the database file
+
+as.data.frame(dbListTables(conn))
 ```
 
 ```{r}
 dbDisconnect(conn)
 ```
 
-```{r}
-as.data.frame(dbListTables(conn))
-```
 
+### Selecting columns of interest
 
 ```{r}
 fires_small <- fires %>%
-  select(NWCG_REPORTING_AGENCY, SOURCE_REPORTING_UNIT_NAME, FIRE_CODE, FIRE_NAME,
+  select(NWCG_REPORTING_AGENCY, SOURCE_REPORTING_UNIT_NAME, FIRE_NAME,
          FIRE_YEAR, DISCOVERY_DATE, DISCOVERY_DOY, DISCOVERY_TIME, CONT_DATE,
          CONT_DOY, CONT_TIME, STAT_CAUSE_CODE, STAT_CAUSE_DESCR, FIRE_SIZE, 
          FIRE_SIZE_CLASS, LATITUDE, LONGITUDE, OWNER_CODE, OWNER_DESCR, STATE, 
@@ -44,10 +49,8 @@ fires_small <- fires %>%
 fires_small <- clean_names(fires_small)
 ```
 
-```{r}
-str(fires_small)
-```
 
+### Changing some columms to be factors
 
 ```{r}
 fires_small <- fires_small %>%
@@ -59,52 +62,62 @@ fires_small <- fires_small %>%
 ```
 
 
+### Date is in Julian format, so overwriting with Gregorian format using year and day of year columns.  Also adding in a month of year column for future use.
+
 ```{r}
 fires_small <- fires_small %>%
-  mutate(cont_date = as.Date(cont_date - 2458014.5, origin = "2017-09-18")) %>%
-  mutate(discovery_date = as.Date(discovery_date - 2458014.5, origin = "2017-09-18"))
+  mutate(date_origin = as.Date(paste0(fire_year, "-01-01"))) %>%
+  mutate(discovery_date = as.Date(discovery_doy, origin = date_origin)) %>%
+  mutate(discovery_moy = month(discovery_date)) %>%
+  select(-date_origin)
 ```
 
 
 
-# visualisations
 
-## fires per year
+
+# 2. Creating some visualisations
+
+
+### fires per year
 
 ```{r}
 fires_small %>%
   group_by(fire_year) %>%
   summarise(num_fires =n()) %>%
-  ggplot(aes(x = fire_year, y = num_fires)) +
+  ggplot +
+  aes(x = fire_year, y = num_fires) +
   geom_col(fill = "dark blue", col ="white")
 ```
 
-## fire per day
+
+## fires per day
 
 ```{r}
 fires_small %>%
   group_by(discovery_date) %>%
   summarise(num_fires = n()) %>%
-  ggplot(aes(x = discovery_date, y = num_fires)) +
+  ggplot +
+  aes(x = discovery_date, y = num_fires) +
   geom_line(col = "dark blue")
 
 ```
 
 
-## fire per month
+### fires per month
 
 ```{r}
 fires_small %>%
-  mutate(month = month(discovery_date)) %>%
-  group_by(fire_year, month) %>%
+  mutate(year_month = make_date(fire_year, discovery_moy)) %>%
+  group_by(year_month) %>%
   summarise(num_fires = n()) %>%
-  mutate(year_month = make_date(fire_year, month)) %>%
-  ggplot(aes(x = year_month, y = num_fires)) +
+  ggplot +
+  aes(x = year_month, y = num_fires) +
   geom_line(col = "dark blue")
 ```
 
 
-## fires by day of year
+### fires by day of year
 
 
 ```{r}
@@ -115,16 +128,37 @@ fires_small %>%
   geom_line(col = "dark blue")
 ```
 
+*4th July? DOY: 185/186*
+
+
+### fires by month of year
+
+```{r}
+fires_small %>%
+  mutate(discovery_moy = (month(ymd(discovery_date), label = TRUE))) %>%
+  group_by(discovery_moy) %>%
+  summarise(num_fires = n()) %>%
+  ggplot(aes(x = discovery_moy, y = num_fires)) +
+  geom_col(fill = "dark blue", col = "white")
+```
+
+*why mar/apr peak?*
+
+
+
 
 ## fires by cause
 
 ```{r}
+options(scipen = 999)
+
 fires_small %>%
   group_by(stat_cause_descr) %>%
   summarise(num_fires = n()) %>%
-  ggplot(aes(reorder(x = stat_cause_descr, num_fires), y = num_fires)) +
+  ggplot +
+  aes(reorder(x = stat_cause_descr, num_fires), y = num_fires) +
   geom_col(fill = "dark blue") + 
-  coord_flip()
+  coord_flip() 
 ```
 
 
@@ -134,7 +168,8 @@ fires_small %>%
 fires_small %>%
   group_by(stat_cause_descr) %>%
   summarise(avg_size = mean(fire_size)) %>%
-  ggplot(aes(reorder(x = stat_cause_descr, avg_size), y = avg_size)) +
+  ggplot +
+  aes(reorder(x = stat_cause_descr, avg_size), y = avg_size) +
   geom_col(fill = "dark blue") + 
   coord_flip()
 ```
@@ -142,34 +177,46 @@ fires_small %>%
 
 ## av burn time by cause
 
-(891531 NAs)
-
 ```{r}
 fires_small %>%
-  group_by(stat_cause_descr) %>%
-  summarise(burn_time = mean((cont_date - discovery_date), na.rm = TRUE)) %>%
-  ggplot(aes(reorder(x = stat_cause_descr, burn_time), y = burn_time)) +
-  geom_col(fill = "dark blue")
+  summarise(num_na = sum(is.na(cont_date)))
 ```
+*Literally half the data is missing for burn time, making it very difficult to do any meaningful analysis*
 
-## fires by size
 
-(change x-axis to show numbers not letter)
+
+### fires by size
+
 
 ```{r}
 fires_small %>%
   group_by(fire_size_class) %>%
   summarise(num_fires = n()) %>%
-  ggplot(aes(reorder(x = fire_size_class, num_fires), y = num_fires, fill = fire_size_class)) +
+  ggplot +
+  aes(x = fire_size_class, y = num_fires, fill = fire_size_class) +
   geom_col() +
-  coord_flip()
+  scale_fill_manual(values = c("red", "orange", "yellow", "green", "blue", 
+                               "purple", "black"),
+                    name = "Fire Size Classification",
+                    breaks = c("A", "B", "C", "D", "E", "F", "G"),
+                    labels = c("A: < 1/4 acre", "B: 1/4 to 10 acres", "C: 10 to 100 acres",
+                               "D: 100 to 300 acres", "E: 300 to 1000 acres",
+                               "F: 1000 to 5000 acres", "G: More than 5000 acres"))
+
 ```
 
 
+# Geo Spatial Visualisations 
+
+
+
+
+
+### To make meaningful use of information on fires per State we need to convert the State abbreviation into it's name we it can be plotted on a map.  Using the list of state abbreviation dataset included with base R.
 
 
 ```{r}
-state_list <- tibble(state = state.abb, region = tolower(state.name))
+state_list <- tibble(state = state.abb, state_name = state.name)
 state_list
 ```
 
@@ -178,6 +225,15 @@ state_list is 50 rows, but the state column from fires_small has 52.
 ```{r}
 length(unique(fires_small$state))
 ```
+
+
+*Sdgdg*
+
+```{r}
+state_list <- tibble(state = state.abb, region = tolower(state.name))
+```
+
+
 
 Make a new data frame with the state column from fires_small
 
