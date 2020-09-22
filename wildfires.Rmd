@@ -105,8 +105,11 @@ fires_small %>%
   summarise(num_fires =n()) %>%
   ggplot +
   aes(x = fire_year, y = num_fires) +
-  geom_col(fill = "dark blue", col ="white")
+  geom_point() +
+  # geom_col(fill = "dark blue", col ="white") +
+  geom_smooth(method = 'lm', se = FALSE, colour = "red")
 ```
+**It can be seen from the linear modelling smoother that there is a slight increase of wildfire over the recording period, but there is a lot of variation in the data between years.  There is almost a repeating pattern occuring with 4 peaks visible.  Having looked at the historic weather for that date range these peaks seems to coincide with recorded heatwaves in 2000, 2006 and 2011.**
 
 
 ### Fires per day
@@ -121,6 +124,8 @@ fires_small %>%
 
 ```
 
+**This shows a typical time series plot with a cyclic variation due to warmer weather in the summer time.**
+
 
 ### Fires per month
 
@@ -134,6 +139,8 @@ fires_small %>%
   geom_line(col = "dark blue")
 ```
 
+**Peaks are still shown to be occurring in the summer. The 2006 heatwave is especially visable.**
+
 
 ### Fires by day of year
 
@@ -146,7 +153,18 @@ fires_small %>%
   geom_line(col = "dark blue")
 ```
 
-**4th July? DOY: 185/186**
+**The are peaks around day 60-110 and a big peak around 180.**
+
+#### Checking the data to see where the peak occurs
+
+```{r}
+fires_small %>%
+  group_by(discovery_doy) %>%
+  summarise(num_fires = n()) %>%
+  arrange(desc(num_fires))
+```
+**The 2 highest days of the year are on 185 and 186, which happens to be Independence Day (4th July) on a normal year and a leap year retrospectively.  So I imagine most of the extra fires (literally over double the normal amount) are caused by fireworks.**
+
 
 
 ### Fires by month of year
@@ -160,7 +178,7 @@ fires_small %>%
   geom_col(fill = "dark blue", col = "white")
 ```
 
-**why mar/apr peak?**
+**There are 2 definite peaks during the year.  March and April are probably due to the US "Spring Break", where schools and Universities are stopped and so families are likely to be on vacation during that period possibly visiting National Parks.  July and August is also Summer Break for school with both families visiting Parks and hot weather likey causes of fire outbreaks.**
 
 
 
@@ -530,7 +548,7 @@ state_list <- tibble(state = state.abb, region = tolower(state.name), area = as.
 ```
 
 ```{r}
-# Rejoing tibbles
+# Re-joing tibbles
 
 fires_states <- fires_small %>%
   left_join(state_list, by = "state")
@@ -541,8 +559,20 @@ fires_states <- fires_small %>%
 
 ```{r}
 fires_states %>%
-  select(region) %>%
-  group_by(region) %>%
+  select(region, area) %>%
+  group_by(region, area) %>%
+  summarise(num_fires = n()) %>%
+  mutate(fires_sqmile = num_fires / area) %>%
+  arrange(desc(fires_sqmile))
+```
+
+#### This table shows Puerto Rico has the highest proportion of fires compared to its size, followed by New Jersey in the NE of the country and finally by the States in the SE of the country.
+
+
+```{r}
+fires_states %>%
+  select(region, area) %>%
+  group_by(region, area) %>%
   summarise(num_fires = n()) %>%
   mutate(fires_sqmile = num_fires / area) %>%
   right_join(state_map, by = "region") %>%
@@ -552,10 +582,12 @@ fires_states %>%
   geom_path(color = 'white') + 
   scale_fill_continuous(low = "darkblue", 
                         high = "darkred",
-                        name = "Number of fires") + 
+                        name = "Fire per Sq mile") + 
   theme_map() + 
   coord_map("mollweide") + 
   ggtitle(paste0("Total US Wildfires per Square Mile from 1992-2015")) + 
   theme(plot.title = element_text(hjust = 0.5))
-```
+````
+
+#### Puerto Rico is not shown on this map, but visually we can see the data for the other 51 entries.
 
