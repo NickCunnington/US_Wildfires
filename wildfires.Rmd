@@ -109,7 +109,7 @@ fires_small %>%
   # geom_col(fill = "dark blue", col ="white") +
   geom_smooth(method = 'lm', se = FALSE, colour = "red")
 ```
-**It can be seen from the linear modelling smoother that there is a slight increase of wildfire over the recording period, but there is a lot of variation in the data between years.  There is almost a repeating pattern occuring with 4 peaks visible.  Having looked at the historic weather for that date range these peaks seems to coincide with recorded heatwaves in 2000, 2006 and 2011.**
+**It can be seen from the linear modelling smoother that there is a slight increase of wildfire over the recording period, but there is a lot of variation in the data between years.  There is almost a repeating pattern occurring with 4 peaks visible.  Having looked at the historic weather for that date range these peaks seems to coincide with recorded heatwaves in 2000, 2006 and 2011.**
 
 
 ### Fires per day
@@ -321,7 +321,7 @@ state_list <- tibble(state = state.abb, region = tolower(state.name))
 
 
 ```{r}
-# Rejoing tibbles
+# Re-joing tibbles
 
 fires_states <- fires_small %>%
   left_join(state_list, by = "state")
@@ -587,7 +587,48 @@ fires_states %>%
   coord_map("mollweide") + 
   ggtitle(paste0("Total US Wildfires per Square Mile from 1992-2015")) + 
   theme(plot.title = element_text(hjust = 0.5))
-````
+```
 
-#### Puerto Rico is not shown on this map, but visually we can see the data for the other 51 entries.
+**Puerto Rico is not shown on this map, but visually we can see the data for the other 51 entries.**
 
+
+### Do causes change over time?
+
+
+#### Splitting causes into 2 group for legibility. 
+
+#### This one more made created fires
+
+```{r}
+fires_states %>%
+  select(stat_cause_descr, fire_year) %>%
+  group_by(fire_year, stat_cause_descr) %>%
+  filter(stat_cause_descr == "Arson" | stat_cause_descr == "Campfire" |
+           stat_cause_descr == "Children" | stat_cause_descr == "Equipment Use" |
+           stat_cause_descr == "Fireworks" | stat_cause_descr == "Smoking") %>%
+  summarise(num_fires = n()) %>%
+  ggplot +
+  aes(x = fire_year, y = num_fires, colour = stat_cause_descr) +
+  geom_line()
+```
+
+**The 2 large peaks in Arson are obvious in 1999 and 2006.  There is also another peak in 2006 for Equipment Use.  Arson does looks to be decreasing since  2006.**
+
+
+#### And this one for natural occuring fire
+
+```{r}
+fires_states %>%
+  select(stat_cause_descr, fire_year) %>%
+  group_by(fire_year, stat_cause_descr) %>%
+  filter(stat_cause_descr == "Debris Burning" | stat_cause_descr == "Lightning" |
+           stat_cause_descr == "Miscellaneous" | stat_cause_descr == 
+           "Missing/Undefined" | stat_cause_descr == "Powerline" | 
+           stat_cause_descr == "Railroad" | stat_cause_descr == "Structure") %>%
+  summarise(num_fires = n()) %>%
+  ggplot +
+  aes(x = fire_year, y = num_fires, colour = stat_cause_descr) +
+  geom_line()
+```
+
+**Similar peaks can be seen in Debris, Miscellaneous and lightning in 2006**
