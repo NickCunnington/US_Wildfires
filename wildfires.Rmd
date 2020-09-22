@@ -17,21 +17,41 @@ library(ggthemes)
 # 1.  Data Cleaning
 
 
-Creating connection to the sqlite database and downloading fires dataset
+####  Creating connection to the sqlite database and downloading fires dataset
 
 ```{r}
-conn <- dbConnect(SQLite(), 'raw_data/FPA_FOD_20170508.sqlite')
+# Connecting
 
-fires <- tbl(conn, "Fires") %>% collect()
+conn <- dbConnect(SQLite(), 'raw_data/FPA_FOD_20170508.sqlite')
 ```
 
 ```{r}
-# pulling all the names of the tables in the database file
+# Pulling all the names of the tables in the database file
 
 as.data.frame(dbListTables(conn))
 ```
 
 ```{r}
+# Making fires dataframe
+
+fires <- tbl(conn, "Fires") %>% collect()
+```
+
+
+#### Seeing what other useful information is in the database.  The majority are part of the database structure and are not readable in R.
+
+```{r}
+# EPSG worldwide geodetic parameter dataset system
+spatial_ref <- tbl(conn, "spatial_ref_sys_all") %>% collect()
+
+# National Wildfire Coordinating Group unit abbreviations 
+NWGG <- tbl(conn, "NWCG_UnitIDActive_20170109") %>% collect()
+```
+
+
+```{r}
+# Disconnect
+
 dbDisconnect(conn)
 ```
 
@@ -62,7 +82,7 @@ fires_small <- fires_small %>%
 ```
 
 
-### Date is in Julian format, so overwriting with Gregorian format using year and day of year columns.  Also adding in a month of year column for future use.
+### Date is in Julian format, so overwriting with Gregorian format using year and day of year columns.  Also adding in a 'month of year column' for future use.
 
 ```{r}
 fires_small <- fires_small %>%
@@ -74,12 +94,10 @@ fires_small <- fires_small %>%
 
 
 
+# 2. Creating some initial visualisations
 
 
-# 2. Creating some visualisations
-
-
-### fires per year
+### Fires per year
 
 ```{r}
 fires_small %>%
@@ -91,7 +109,7 @@ fires_small %>%
 ```
 
 
-## fires per day
+### Fires per day
 
 ```{r}
 fires_small %>%
@@ -104,7 +122,7 @@ fires_small %>%
 ```
 
 
-### fires per month
+### Fires per month
 
 ```{r}
 fires_small %>%
@@ -117,7 +135,7 @@ fires_small %>%
 ```
 
 
-### fires by day of year
+### Fires by day of year
 
 
 ```{r}
@@ -128,10 +146,10 @@ fires_small %>%
   geom_line(col = "dark blue")
 ```
 
-*4th July? DOY: 185/186*
+**4th July? DOY: 185/186**
 
 
-### fires by month of year
+### Fires by month of year
 
 ```{r}
 fires_small %>%
@@ -142,12 +160,12 @@ fires_small %>%
   geom_col(fill = "dark blue", col = "white")
 ```
 
-*why mar/apr peak?*
+**why mar/apr peak?**
 
 
 
 
-## fires by cause
+### Fires by cause
 
 ```{r}
 options(scipen = 999)
@@ -162,7 +180,7 @@ fires_small %>%
 ```
 
 
-## fire avg size by cause
+### Fire avg size by cause
 
 ```{r}
 fires_small %>%
@@ -175,7 +193,7 @@ fires_small %>%
 ```
 
 
-## av burn time by cause
+### Avg burn time by cause
 
 ```{r}
 fires_small %>%
@@ -185,7 +203,7 @@ fires_small %>%
 
 
 
-### fires by size
+### Fires by size
 
 
 ```{r}
@@ -206,84 +224,183 @@ fires_small %>%
 ```
 
 
-# Geo Spatial Visualisations 
+
+# Geo Spatial wrangling 
 
 
+### To make it easier to visually detect frequency of wildfires between states I want display it in a map format.  As I'm using ggplot2 already I'm going to also use it for maps with the `geom_polygon()`, `coord_map()` along with the ggthemes `theme_map()` functions.
 
 
+#### I'm not entirely sure what geo-spatial information is being held with in the sqlite database file, I've made a few attempts to retrieve it but have been unsuccessful.  Therefore I'm going to utelise the `datasets` package which includes various bits of information on the US States, including coordinates for state boundaries.
 
-### To make meaningful use of information on fires per State we need to convert the State abbreviation into it's name we it can be plotted on a map.  Using the list of state abbreviation dataset included with base R.
 
+```{r}
+# State boundary co-ordinates from 'datasets' package
+
+state_map <- map_data("state")
+state_map
+```
+
+
+#### Annoyingly it doesn't have the abbreviation of the State, only the full name so I need to add that in.  Luckily the 'datasets' package also has a vector of States names and abbreviations so I shall make a tibble with them both in.
+
+
+```{r}
+state.abb
+```
+
+```{r}
+state.name
+```
 
 ```{r}
 state_list <- tibble(state = state.abb, state_name = state.name)
 state_list
 ```
 
-state_list is 50 rows, but the state column from fires_small has 52.
 
-```{r}
-length(unique(fires_small$state))
-```
+#### The `state_map` dataframe is in lower case and has the column name 'region'.  I shall change the `state_list` tibble to be the same format so they can be joined together.
 
-
-*Sdgdg*
 
 ```{r}
 state_list <- tibble(state = state.abb, region = tolower(state.name))
 ```
 
 
-
-Make a new data frame with the state column from fires_small
+#### Joing `state_list` to `fires_small` datasets
 
 ```{r}
-fire_states <- as.data.frame(unique(fires_small$state))
-names(fire_states)[1] <- "state"
+fires_states <- fires_small %>%
+  left_join(state_list, by = "state")
+
+fires_states
 ```
 
-Join to the state_list
+
+#### Checking the join has worked and there are no missing values.
 
 ```{r}
-fire_states_list <- full_join(state_list, fire_states)
-```
-
-Find missing states
-
-```{r}
-fire_states_list %>%
+fires_states %>%
   filter(is.na(region))
-  
 ```
 
-Adding DC and PR to fires_small and check for 52 entries
+
+#### There does seem to be 22,147 NAs in the 'region' column we just made.  Scrolling through there are 2 missing States of 'PR' and 'DC' in the `states_list` tibble.
+
+#### After some quick research it seems that there are only 50 States in the US. Washington DC is techincally not counted as a state but as a Federal District, as it is the seat of government, so that was why it wasn't included in the `States` tibble originally.  PR is Puerto Rico and is also not a state but the largest US territory .
+
+
+#### I shall add DC and PR into the state_list and re-join it.
 
 ```{r}
+# Adding 2 new states
+
 state.abb <- append(state.abb, c("DC", "PR"))
 state.name <- append(state.name, c("District of Columbia", "Puerto Rico"))
 
 state_list <- tibble(state = state.abb, region = tolower(state.name))
-
-nrow(state_list)
 ```
 
 
 ```{r}
-fires_small <- fires_small %>%
+# Rejoing tibbles
+
+fires_states <- fires_small %>%
   left_join(state_list, by = "state")
 ```
 
 
 ```{r}
-state_map <- map_data("state")
+# Checking the join has worked properly and there are no NAs
+
+fires_states %>%
+  filter(is.na(region))
+```
+
+```{r}
+# Code below brings up a "vector memory exhausted (limit reached?)" error
+
+# fires_joined <- fires_states %>%
+#  right_join(state_map, by = "region")
 ```
 
 
+#### The data set and geo information is too big to join so I'm going to do a summarise first to get the number of fires per region first.
+
 ```{r}
-fires_small %>% 
+fires_joined <- fires_states %>% 
     select(region) %>%
     group_by(region) %>%
     summarise(num_fires = n()) %>%
+    right_join(state_map, by = "region")
+```
+
+**Result!!  Now doing first geo spatial visualisation**
+
+
+### Total Wildfires per state from 1992-2015
+
+```{r}
+fires_joined %>% 
+    ggplot +
+    (aes(x = long, y = lat, group = group, fill = num_fires)) + 
+    geom_polygon() + 
+    geom_path(color = 'white') + 
+    scale_fill_continuous(low = "darkblue", 
+                          high = "darkred",
+                          name = "Number of fires") + 
+    theme_map() + 
+    coord_map("mollweide") + 
+    ggtitle("Total US Wildfires from 1992-2015") + 
+    theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+# 3. Geo Spatial Visualisations
+
+### The dataset has a cause of fire column so I shall now create some causation plots.
+
+
+#### Getting list of fire causes
+
+```{r}
+fires_states %>%
+  distinct(stat_cause_descr) %>%
+  arrange(-desc(stat_cause_descr))
+```
+
+
+### Total fire by cause in tabular form
+
+```{r}
+fires_states %>%
+  select(stat_cause_descr) %>%
+  group_by(stat_cause_descr) %>%
+  summarise(num_fires = n ()) %>%
+  arrange(desc(num_fires))
+  
+```
+
+### Number of fires by state in tabular form
+
+```{r}
+fires_states %>%
+  select(region) %>%
+  group_by(region) %>%
+  summarise(num_fires = n()) %>%
+  arrange(desc(num_fires))
+```
+
+
+#### As the cause needs to be filtered before the map join, I'm going to either going to have to do it in every single plot or write a function that will do it for me with a lot less code in total.
+
+```{r}
+cause <- function(cause) {
+  fires_states %>%
+    filter(stat_cause_descr == cause) %>%
+    select(region) %>%
+    group_by(region) %>%
+    summarise(num_fires = n ()) %>%
     right_join(state_map, by = "region") %>%
     ggplot +
     (aes(x = long, y = lat, group = group, fill = num_fires)) + 
@@ -294,15 +411,151 @@ fires_small %>%
                           name = "Number of fires") + 
     theme_map() + 
     coord_map("mollweide") + 
-    ggtitle("US Wildfires, 1992-2015") + 
+    ggtitle(paste0("Total US Wildfires caused by ", cause, " from 1992-2015")) + 
     theme(plot.title = element_text(hjust = 0.5))
+}
 ```
 
 
 
+### Wildfires caused by Arson
 
 ```{r}
+cause("Arson")
+```
+
+### Wildfires caused by Campfire
+
+```{r}
+cause("Campfire")
+```
+
+### Wildfires caused by Children
+
+```{r}
+cause("Children")
+```
+
+### Wildfires caused by Debris Burning
+
+```{r}
+cause("Debris Burning")
+```
+
+### Wildfires caused by Equiment Use
+
+```{r}
+cause("Equipment Use")
+```
+
+### Wildfires caused by Fireworks
+
+```{r}
+cause("Fireworks")
+```
+
+### Wildfires caused by Lightning
+
+```{r}
+cause("Lightning")
+```
+
+### Wildfires caused by Miscellious
+
+```{r}
+cause("Miscellaneous")
+```
+
+### Wildfires caused by Missing/Undefined
+
+```{r}
+cause("Missing/Undefined")
+```
+
+### Wildfires caused by Powerline
+
+```{r}
+cause("Powerline")
+```
+
+### Wildfires caused by Railroad
+
+```{r}
+cause("Railroad")
+```
+
+### Wildfires caused by Smoking
+
+```{r}
+cause("Smoking")
+```
+
+### Wildfires caused by Structure
+
+```{r}
+cause("Structure")
+```
+
+
+#### Unsurprisingly the southern states seem to have more occurences of wildifre in general, no doubt due to the warmer climate at their latitudes.  Also the 1st and 3rd states with the highest number of fires are also the 2 largest States by size. However the 2nd highest State is Georgia, which although in the South of the country is an average sized State.  Therefore to get a better picture of what is going on I'm going to look at the proportion of fires occuring by square mile by normalising the State size.
+
+#### The `dataset` package also has the area in square miles of each state included in the `state.area` vector.
+
+```{r}
+state.area
+```
+
+```{r}
+length(state.area)
+```
+
+#### Annoyingly it also only has 50 states not 52 so I will need to add in DC and PR.  
+
+(Area figures obtained from Wikipedia)
+DC = 68 miles^2
+PR = 3515 miles^2
+
+
+```{r}
+# To make my life easier I'm going to remove the state.abb and .name files and make the tibble again, adding in the land area figures at the same time to make sure they are in the correct order.
+
 rm(state.abb)
 rm(state.name)
+
+state.abb <- append(state.abb, c("DC", "PR"))
+state.name <- append(state.name, c("District of Columbia", "Puerto Rico"))
+state.area <- append(state.area, c("68", "3515"))
+
+state_list <- tibble(state = state.abb, region = tolower(state.name), area = as.numeric(state.area))
+```
+
+```{r}
+# Rejoing tibbles
+
+fires_states <- fires_small %>%
+  left_join(state_list, by = "state")
+```
+
+
+### Normalising States area sizes
+
+```{r}
+fires_states %>%
+  select(region) %>%
+  group_by(region) %>%
+  summarise(num_fires = n()) %>%
+  mutate(fires_sqmile = num_fires / area) %>%
+  right_join(state_map, by = "region") %>%
+  ggplot +
+  (aes(x = long, y = lat, group = group, fill = fires_sqmile)) + 
+  geom_polygon() + 
+  geom_path(color = 'white') + 
+  scale_fill_continuous(low = "darkblue", 
+                        high = "darkred",
+                        name = "Number of fires") + 
+  theme_map() + 
+  coord_map("mollweide") + 
+  ggtitle(paste0("Total US Wildfires per Square Mile from 1992-2015")) + 
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
