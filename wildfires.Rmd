@@ -11,6 +11,7 @@ library(janitor)
 library(lubridate)
 library(datasets)
 library(ggthemes)
+library(gganimate)
 ```
 
 
@@ -22,7 +23,7 @@ library(ggthemes)
 ```{r}
 # Connecting
 
-conn <- dbConnect(SQLite(), 'raw_data/FPA_FOD_20170508.sqlite')
+conn <- dbConnect(SQLite(), "raw_data/FPA_FOD_20170508.sqlite")
 ```
 
 ```{r}
@@ -107,7 +108,7 @@ fires_small %>%
   aes(x = fire_year, y = num_fires) +
   geom_point() +
   # geom_col(fill = "dark blue", col ="white") +
-  geom_smooth(method = 'lm', se = FALSE, colour = "red")
+  geom_smooth(method = "lm", se = FALSE, colour = "red")
 ```
 **It can be seen from the linear modelling smoother that there is a slight increase of wildfire over the recording period, but there is a lot of variation in the data between years.  There is almost a repeating pattern occurring with 4 peaks visible.  Having looked at the historic weather for that date range these peaks seems to coincide with recorded heatwaves in 2000, 2006 and 2011.**
 
@@ -178,7 +179,7 @@ fires_small %>%
   geom_col(fill = "dark blue", col = "white")
 ```
 
-**There are 2 definite peaks during the year.  March and April are probably due to the US "Spring Break", where schools and Universities are stopped and so families are likely to be on vacation during that period possibly visiting National Parks.  July and August is also Summer Break for school with both families visiting Parks and hot weather likey causes of fire outbreaks.**
+**There are 2 definite peaks during the year.  March and April are probably due to the US "Spring Break", where schools and Universities are stopped and so families are likely to be on vacation during that period possibly visiting National Parks.  July and August is also Summer Break for school with both families visiting Parks and hot weather likely causes of fire outbreaks.**
 
 
 
@@ -363,7 +364,7 @@ fires_joined %>%
     ggplot +
     (aes(x = long, y = lat, group = group, fill = num_fires)) + 
     geom_polygon() + 
-    geom_path(color = 'white') + 
+    geom_path(color = "white") + 
     scale_fill_continuous(low = "darkblue", 
                           high = "darkred",
                           name = "Number of fires") + 
@@ -410,9 +411,11 @@ fires_states %>%
 ```
 
 
-#### As the cause needs to be filtered before the map join, I'm going to either going to have to do it in every single plot or write a function that will do it for me with a lot less code in total.
+#### As the cause needs to be filtered before the map join, I'm going to either going to have to repeat a whole load of the same code in every single plot or write a function that will do it for me with, saving a lot of typing!
 
 ```{r}
+# Function for plotting cause of fire
+
 cause <- function(cause) {
   fires_states %>%
     filter(stat_cause_descr == cause) %>%
@@ -423,7 +426,7 @@ cause <- function(cause) {
     ggplot +
     (aes(x = long, y = lat, group = group, fill = num_fires)) + 
     geom_polygon() + 
-    geom_path(color = 'white') + 
+    geom_path(color = "white") + 
     scale_fill_continuous(low = "darkblue", 
                           high = "darkred",
                           name = "Number of fires") + 
@@ -617,10 +620,8 @@ fires_states %>%
   ggplot +
   (aes(x = long, y = lat, group = group, fill = fires_sqmile)) + 
   geom_polygon() + 
-  geom_path(color = 'white') + 
-  scale_fill_continuous(low = "darkblue", 
-                        high = "darkred",
-                        name = "Fire per Sq mile") + 
+  geom_path(color = "white") + 
+  scale_fill_distiller(name = "Fire per Sq Mile", palette = "PuBuGn") +
   theme_map() + 
   coord_map("mollweide") + 
   ggtitle(paste0("Total US Wildfires per Square Mile from 1992-2015")) + 
@@ -670,4 +671,165 @@ fires_states %>%
 ```
 
 **Similar peaks can be seen in Debris, Miscellaneous and lightning in the heatwave of 2006 that left the ground very dry.  There are peaks from 1997 to 2003 in debris, miscellaneous and lightening, but also a trough in missing/undefined, so this is likely to be due to more accurate classification of fires and not using the missing/undefined category as much.**
+
+
+
+### Difference in causes between states
+
+
+```{r}
+state_map_southern <- state_map %>%
+  filter(region == "florida" | region == "georgia" | region == "alabama" |
+           region == "mississippi" | region == "south carolina" | 
+           region == "north carolina" | region == "tennessee" | 
+           region == "arkansas" | region == "louisiana")
+```
+
+
+```{r}
+fires_states %>%
+  filter(fire_year == "1992" | fire_year == "1993" | fire_year == "1994" |
+           fire_year == "1995") %>%
+  filter(region == "florida" | region == "georgia" | region == "alabama" |
+           region == "mississippi" | region == "south carolina" | 
+           region == "north carolina" | region == "tennessee" |
+           region == "arkansas" | region == "louisiana") %>%
+  select(region, stat_cause_descr) %>%
+  group_by(region, stat_cause_descr) %>%
+  summarise(num_fire = n()) %>%
+  top_n(1) %>%
+  right_join(state_map_southern, by = "region") %>%
+  ggplot +
+  (aes(x = long, y = lat, group = group, fill = stat_cause_descr)) + 
+  geom_polygon() + 
+  geom_path(color = "white") + 
+  theme_map() + 
+  scale_fill_brewer(name = "Cause of Fires", palette = "PuBuGn") +
+  ggtitle("Total US Wildfires main cause from 1992-1995") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+```{r}
+fires_states %>%
+  filter(fire_year == "1996" | fire_year == "1997" | fire_year == "1998" |
+           fire_year == "1999") %>%
+  filter(region == "florida" | region == "georgia" | region == "alabama" |
+           region == "mississippi" | region == "south carolina" | 
+           region == "north carolina" | region == "tennessee" |
+           region == "arkansas" | region == "louisiana") %>%
+  select(region, stat_cause_descr) %>%
+  group_by(region, stat_cause_descr) %>%
+  summarise(num_fire = n()) %>%
+  top_n(1) %>%
+  right_join(state_map_southern, by = "region") %>%
+  ggplot +
+  (aes(x = long, y = lat, group = group, fill = stat_cause_descr)) + 
+  geom_polygon() + 
+  geom_path(color = "white") + 
+  theme_map() + 
+  scale_fill_brewer(name = "Cause of Fires", palette = "PuBuGn") +
+  ggtitle("Total US Wildfires main cause from 1996-1999") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+fires_states %>%
+  filter(fire_year == "2000" | fire_year == "2001" | fire_year == "2002" |
+           fire_year == "2003") %>%
+  filter(region == "florida" | region == "georgia" | region == "alabama" |
+           region == "mississippi" | region == "south carolina" | 
+           region == "north carolina" | region == "tennessee" |
+           region == "arkansas" | region == "louisiana") %>%
+  select(region, stat_cause_descr) %>%
+  group_by(region, stat_cause_descr) %>%
+  summarise(num_fire = n()) %>%
+  top_n(1) %>%
+  right_join(state_map_southern, by = "region") %>%
+  ggplot +
+  (aes(x = long, y = lat, group = group, fill = stat_cause_descr)) + 
+  geom_polygon() + 
+  geom_path(color = "white") + 
+  theme_map() + 
+  scale_fill_brewer(name = "Cause of Fires", palette = "PuBuGn") +
+  ggtitle("Total US Wildfires main cause from 2000-2003") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+```{r}
+fires_states %>%
+  filter(fire_year == "2004" | fire_year == "2005" | fire_year == "2006" |
+           fire_year == "2007") %>%
+  filter(region == "florida" | region == "georgia" | region == "alabama" |
+           region == "mississippi" | region == "south carolina" | 
+           region == "north carolina" | region == "tennessee" |
+           region == "arkansas" | region == "louisiana") %>%
+  select(region, stat_cause_descr) %>%
+  group_by(region, stat_cause_descr) %>%
+  summarise(num_fire = n()) %>%
+  top_n(1) %>%
+  right_join(state_map_southern, by = "region") %>%
+  ggplot +
+  (aes(x = long, y = lat, group = group, fill = stat_cause_descr)) + 
+  geom_polygon() + 
+  geom_path(color = "white") + 
+  theme_map() + 
+  scale_fill_brewer(name = "Cause of Fires", palette = "PuBuGn") +
+  ggtitle("Total US Wildfires main cause from 2004-2007") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+```{r}
+fires_states %>%
+  filter(fire_year == "2008" | fire_year == "2009" | fire_year == "2010" |
+           fire_year == "2011") %>%
+  filter(region == "florida" | region == "georgia" | region == "alabama" |
+           region == "mississippi" | region == "south carolina" | 
+           region == "north carolina" | region == "tennessee" |
+           region == "arkansas" | region == "louisiana") %>%
+  select(region, stat_cause_descr) %>%
+  group_by(region, stat_cause_descr) %>%
+  summarise(num_fire = n()) %>%
+  top_n(1) %>%
+  right_join(state_map_southern, by = "region") %>%
+  ggplot +
+  (aes(x = long, y = lat, group = group, fill = stat_cause_descr)) + 
+  geom_polygon() + 
+  geom_path(color = "white") + 
+  theme_map() + 
+  scale_fill_brewer(name = "Cause of Fires", palette = "PuBuGn") +
+  ggtitle("Total US Wildfires main cause from 2008-2011") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+
+```{r}
+fires_states %>%
+  filter(fire_year == "2012" | fire_year == "2013" | fire_year == "2014" |
+           fire_year == "2015") %>%
+  filter(region == "florida" | region == "georgia" | region == "alabama" |
+           region == "mississippi" | region == "south carolina" | 
+           region == "north carolina" | region == "tennessee" |
+           region == "arkansas" | region == "louisiana") %>%
+  select(region, stat_cause_descr) %>%
+  group_by(region, stat_cause_descr) %>%
+  summarise(num_fire = n()) %>%
+  top_n(1) %>%
+  right_join(state_map_southern, by = "region") %>%
+  ggplot +
+  (aes(x = long, y = lat, group = group, fill = stat_cause_descr)) + 
+  geom_polygon() + 
+  geom_path(color = "white") + 
+  theme_map() + 
+  scale_fill_brewer(name = "Cause of Fires", palette = "PuBuGn") +
+  ggtitle("Total US Wildfires main cause from 2012-2015") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+**Looking at these trends some interesting insights can be seen.  For the combined years data Florida stands out as having railroad as its main cause of wildfire, but from the above plots it can be seen that these railroad fires are only the main cause up to the 4 yearly period ending in 2003 and then the main cause changes to lightning until the end of the collection period in 2015.  Similarly arson seem reasonably popular in the southern states until 2007, when it no longer appear as the most common cause of wildfire.  This downward trend was also noted earlier in the overall causation plots for all states**
+
+
 
