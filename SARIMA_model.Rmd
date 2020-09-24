@@ -1,0 +1,205 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(MASS)
+library(tseries)
+library(forecast)
+library(fable)
+library(fabletools)
+library(tsibble)
+library(tsibbledata)
+library(feasts)
+```
+
+
+### In order to try and validate the model I will take out the last 4 years of data and train the model on the first 20 years only
+
+```{r}
+monthly_train <- monthly %>%
+  filter(year_month < "2012-01-01")
+
+monthly_test <- monthly %>%
+  filter(year_month >= "2012-01-01")
+```
+
+
+
+```{r}
+# Taking logs of data to smooth the volatility of the data
+
+log_monthly_train <- log(monthly_train$num_fires)
+```
+
+
+```{r}
+# Autocorrelation plot to look for stationarity
+
+acf(log_monthly_train)
+```
+
+```{r}
+# Partial autocorrelation plot to look for stationarity
+
+pacf(log_monthly_train)
+```
+
+**Definitely some repeating patterns in the lag plots which is likely to be some kind of seasonal variation.**
+
+
+
+```{r}
+# Using a Dickey-Fuller test to validate any stationarity.
+
+adf.test(log_monthly_train)
+```
+
+**Agrees with a p-value of 0.01 that the hypothesis of having some kind of repeating pattern is correct and the null hypothesis of being stationary is not proven.**
+
+
+
+
+```{r}
+# Decomposing the time series data to examine any seasonal trends
+
+arima_log_monthly <- ts(log_monthly_train, start = c(1992,01), frequency = 12)
+components <- decompose(arima_log_monthly)
+components
+```
+
+
+**Definitely some seasonal trend in that data, but let's have a look at a plot to make sure**
+
+```{r}
+plot(components)
+```
+
+
+
+**The repeating seasonal trends can be seen very clearly in this plot.**
+
+
+```{r}
+# Using auto.arima to look at the best ARIMA configuration
+
+fit_log_monthly <- auto.arima(arima_log_monthly, trace = TRUE, test = "kpss", ic = "bic")
+```
+
+```{r}
+fit_log_monthly
+```
+
+**auto.arima has chosen the best model with the lowest BIC.**
+
+
+```{r}
+# Calculated Confidence Intervals
+
+confint(fit_log_monthly)
+```
+
+### Now making forecasts for last 4 years
+
+```{r}
+forecast_log_monthly <- forecast(fit_log_monthly, h = 48)
+forecast_log_monthly
+```
+
+```{r}
+plot(forecast_log_monthly)
+```
+
+**ARIMA seems to have only taken the seasonal variation into account and not any trend.**
+
+
+```{r}
+# Creating the logs of the actual test data
+
+log_monthly_test <- monthly_test %>%
+  mutate(num_fires = log(num_fires))
+```
+
+
+```{r}
+# Getting the point forecast out of the forecast list and making it a column in the test set.
+
+
+forecast_df <- as.tibble(forecast_log_monthly)
+
+log_monthly_test$forecast <- forecast_df$`Point Forecast`
+
+log_monthly_test
+```
+
+```{r}
+# Plotting actual vs predicted values for 2011-2015
+
+log_monthly_test %>%
+  ggplot(aes(x = year_month)) +
+  geom_line(aes(y = num_fires), col = "black") +
+  geom_line(aes(y = forecast), col = "red")
+```
+
+
+
+
+
+
+```{r}
+# Taking the exponentials to return from log figures to normal data
+
+forecast_log_monthly_extracted <- as.numeric(forecast_log_monthly$mean)
+forecast_monthly <- exp(forecast_log_monthly_extracted)
+forecast_monthly
+```
+
+```{r}
+# Making a dataframe to compare the last 4 years of predicted data against the actual data
+
+check_data <- data.frame(monthly_test, forecast_monthly)
+
+check_data <- check_data %>%
+  rename(actual_data = num_fires, predicted_data = forecast_monthly)
+```
+
+
+```{r}
+# Adding an absolute error column to the dataframe
+
+check_data <- check_data %>%
+  mutate(absolute_error = abs(actual_data - predicted_data))
+
+check_data
+```
+
+
+```{r}
+# Finding the mean of number of fires for all years
+
+mean_fires <- monthly %>%
+  summarise(mean_fires = mean(num_fires))
+```
+
+
+```{r}
+# Taking the mean of the absolute error
+
+mean_error <- check_data %>%
+  summarise(mean_error = mean(absolute_error))
+```
+
+
+```{r}
+# Percentage error between monthly fires mean and mean absolute monthly error
+
+mean_error / mean_fires
+```
+
+**The model seems to be only considering the seasonal variation and not any underlying trend that might be occurring.  However this the calculated model only seems to have a mean absolute error of around 20% so it is still reasonably accurate.  There is a lot of noise in the data and we saw earlier from the attempt at using simple linear regression, there really doesn't been to be too much of an actual underlying trend of increase or decrease that has been taking place over the recording period that is easily noticeable. Just quite a lot of individual variation and a roughly 5-6 yearly re-occurring pattern of peaks that is especially noticeable in the yearly data.**
+
+
+
