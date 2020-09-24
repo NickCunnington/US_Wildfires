@@ -16,6 +16,14 @@ library(modelr)
 library(broom)
 library(ggfortify)
 library(infer)
+library(MASS)
+library(tseries)
+library(forecast)
+library(fable)
+library(fabletools)
+library(tsibble)
+library(tsibbledata)
+library(feasts)
 ```
 
 
@@ -121,8 +129,12 @@ year_plot %>%
 https://en.wikipedia.org/wiki/List_of_heat_waves
 
 
+#### I will try to create a linear model to hopefully show any increase or decrease of fires over time.  As this is time series data a linear model will not fit, but it could be interesting to see if it identifies a general underlying trend.
+
 
 ```{r}
+# creating the linear model
+
 model <- lm(formula = num_fires ~ fire_year, data = year_plot)
 summary(model)
 ```
@@ -134,9 +146,16 @@ tidy(model)
 clean_names(glance(model))
 ```
 
+**The R Squared is quite low as expected from the widely spread plot and from the high p value we already know the model is not a good fit**
+
+
 ```{r}
+# diagnostic plots
+
 autoplot(model)
 ```
+
+**The diagnostic plots agree that the model isn't a great fit and there is likely to be a curve in the best fit line.  As this is time series data we already know this is the case.**
 
 
 ```{r}
@@ -147,6 +166,8 @@ year_plot
 ```
 
 ```{r}
+# plotting the model best fit line
+
 year_plot %>%
   ggplot(aes(x = fire_year)) +
   geom_point(aes(y = num_fires)) +
@@ -159,7 +180,10 @@ year_plot %>%
   
 ```
 
+**The plotted best fit line does show a slight increase, but as the P value is far too high I can not accept this model as a true representation of the occuring trend**
 
+
+### Just to make sure I'm going to use bootstrapping using the same model
 
 
 ```{r}
@@ -183,6 +207,165 @@ bootstrap_distribution_slope %>%
 clean_names(tidy(model, conf.int = TRUE, conf.level = 0.95))
 ```
 
+**As 0 occurs within the 95% confidence intervals of -283 to +1075 it reinforces the fact that this model can not be used to explain if there are any positive or negative trends that are occurring in this data.  It will be more use to use a model that is designed for time series and seasonal variations.  For that I shall be also requiring more data points so I will now use monthly data and not yearly.**
+
+
+
+### Fires per month
+
+```{r}
+fires_small %>%
+  mutate(year_month = make_date(fire_year, discovery_moy)) %>%
+  group_by(year_month) %>%
+  summarise(num_fires = n()) %>%
+  ggplot +
+  aes(x = year_month, y = num_fires) +
+  geom_line(col = "dark blue")
+```
+
+**Peaks are still shown to be occurring in the summers. The 2006 heatwave is especially visible.**
+
+
+
+### Using the SARIMA model.
+
+```{r}
+monthly <- fires_small %>%
+  mutate(year_month = make_date(fire_year, discovery_moy)) %>%
+  group_by(year_month) %>%
+  summarise(num_fires = n())
+
+write_csv(monthly, path = "clean_data/monthly.csv")
+
+monthly
+```
+
+
+```{r}
+# Taking logs of data to smooth the volatility of the data
+
+log_monthly <- log(monthly$num_fires)
+```
+
+
+```{r}
+# Autocorrelation plot to look for stationarity
+
+acf(log_monthly)
+```
+
+```{r}
+# Partial autocorrelation plot to look for stationarity
+
+pacf(log_monthly)
+```
+
+**Definitely some repeating patterns in the lag plots which is likely to be some kind of seasonal variation.**
+
+
+```{r}
+# Using a Dickey-Fuller test to validate any stationarity.
+
+adf.test(log_monthly)
+```
+
+**Agrees with a p-value of 0.01 that the hypothesis of having some kind of repeating pattern is correct and the null hypothesis of being stationary is not proven.**
+
+
+```{r}
+# Decomposing the time series data to examine any seasonal trends
+
+arima_test <- ts(log_monthly, start = c(1992,01), frequency = 12)
+components <- decompose(arima_test)
+components
+```
+
+**Definitely some seasonal trend in that data, but let's have a look at a plot to make sure**
+
+```{r}
+plot(components)
+```
+
+**The repeating seasonal trends can be seen very clearly in this plot.**
+
+
+```{r}
+# Using auto.arima to look at the best ARIMA configuration
+
+fit_log_monthly <- auto.arima(arima_test, trace = TRUE, test = "kpss", ic = "bic")
+```
+
+```{r}
+fit_log_monthly
+```
+
+**auto.arima has chosen the best model with the lowest BIC.**
+
+
+```{r}
+# Calculated Confidence Intervals
+
+confint(fit_log_monthly)
+```
+
+
+## Non-log data
+
+
+
+
+```{r}
+monthly_num_fires <- monthly$num_fires
+```
+
+```{r}
+acf(monthly_num_fires)
+```
+
+```{r}
+pacf(monthly_num_fires)
+```
+
+```{r}
+adf.test(monthly_num_fires)
+```
+
+```{r}
+monthly_arima <- ts(monthly_num_fires, start = c(1991, 01), frequency = 12)
+```
+
+```{r}
+components_monthly <- decompose(monthly_arima)
+components_monthly
+```
+```{r}
+plot(components_monthly)
+```
+
+```{r}
+fit_monthly <- auto.arima(monthly_arima, trace = TRUE, test = "kpss", ic = "bic")
+```
+
+```{r}
+fit_monthly
+```
+
+```{r}
+confint(fit_monthly)
+```
+
+
+
+
+
+
+
+
+
+```{r}
+
+```
+
 
 
 
@@ -203,19 +386,7 @@ fires_small %>%
 **This shows a typical time series plot with a cyclic variation due to warmer weather in the summer time.**
 
 
-### Fires per month
 
-```{r}
-fires_small %>%
-  mutate(year_month = make_date(fire_year, discovery_moy)) %>%
-  group_by(year_month) %>%
-  summarise(num_fires = n()) %>%
-  ggplot +
-  aes(x = year_month, y = num_fires) +
-  geom_line(col = "dark blue") 
-```
-
-**Peaks are still shown to be occurring in the summer. The 2006 heatwave is especially visable.**
 
 
 ### Fires by day of year
