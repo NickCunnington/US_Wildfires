@@ -114,11 +114,13 @@ year_plot %>%
   aes(x = fire_year, y = num_fires) +
   geom_point() +
   ylim(0, 120000)
-  # geom_col(fill = "dark blue", col ="white") +
-  # geom_smooth(method = "lm", se = FALSE, colour = "red")
 
 ```
-**It can be seen from the linear modelling smoother that there is a slight increase of wildfire over the recording period, but there is a lot of variation in the data between years.  There is almost a repeating pattern occurring with 4 peaks visible.  Having looked at the historic weather for that date range these peaks seems to coincide with recorded heatwaves in 2000, 2006 and 2011.**
+**There is a lot of variation in the data between years.  Visually it looks like a repeating pattern is occurring every 5 years or so with 4 peaks visible within this reporting period.  Having looked at the historic weather for that date range these peaks seems to coincide with recorded heatwaves in 2000, 2006 and 2011.(1)**
+
+https://en.wikipedia.org/wiki/List_of_heat_waves
+
+
 
 ```{r}
 model <- lm(formula = num_fires ~ fire_year, data = year_plot)
@@ -138,26 +140,48 @@ autoplot(model)
 
 
 ```{r}
-bootstrap <- year_plot %>%
+year_plot %>%
+  add_predictions(model) %>%
+  add_residuals(model)
+year_plot
+```
+
+```{r}
+year_plot %>%
+  ggplot(aes(x = fire_year)) +
+  geom_point(aes(y = num_fires)) +
+  geom_abline(
+    intercept = model$coefficients[1],
+    slope = model$coefficients[2],
+    col = "red"
+  ) +
+  ylim(0, 120000)
+  
+```
+
+
+
+
+```{r}
+bootstrap_distribution_slope <- year_plot %>%
   specify(formula = num_fires ~ fire_year) %>%
   generate(reps = 10000, type = "bootstrap") %>%
   calculate(stat = "slope")
 
-bootstrap %>%
-  visualise(bins= 30) +
-  shade_ci(endpoints = slope_ci95)
-
-slope_ci95 <- bootstrap %>%
-  get_ci(level = 0.95, type = "percentile") 
+slope_ci95 <- bootstrap_distribution_slope %>%
+  get_ci(level = 0.95, type = "percentile")
 slope_ci95
+```
 
+```{r}
+bootstrap_distribution_slope %>%
+  visualise(bins = 30) +
+  shade_ci(endpoints = slope_ci95)
 ```
 
 ```{r}
 clean_names(tidy(model, conf.int = TRUE, conf.level = 0.95))
 ```
-
-
 
 
 
@@ -762,10 +786,6 @@ fires_states %>%
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r}
-ggsave("1992-1995.png")
-```
-
 
 ```{r}
 fires_states %>%
@@ -789,11 +809,6 @@ fires_states %>%
   ggtitle("Total US Wildfires main cause from 1996-1999") + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
-
-```{r}
-ggsave("1996-1999.png")
-```
-
 
 
 ```{r}
@@ -819,11 +834,6 @@ fires_states %>%
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r}
-ggsave("2000-2003.png")
-```
-
-
 
 ```{r}
 fires_states %>%
@@ -847,11 +857,6 @@ fires_states %>%
   ggtitle("Total US Wildfires main cause from 2004-2007") + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
-
-```{r}
-ggsave("2004-2007.png")
-```
-
 
 
 
@@ -878,10 +883,6 @@ fires_states %>%
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r}
-ggsave("2008-2011.png")
-```
-
 
 
 ```{r}
@@ -905,10 +906,6 @@ fires_states %>%
   scale_fill_brewer(name = "Cause of Fires", palette = "PuBuGn") +
   ggtitle("Total US Wildfires main cause from 2012-2015") + 
   theme(plot.title = element_text(hjust = 0.5))
-```
-
-```{r}
-ggsave("2012-2015.png")
 ```
 
 **Looking at these trends some interesting insights can be seen.  For the combined years data Florida stands out as having railroad as its main cause of wildfire, but from the above plots it can be seen that these railroad fires are only the main cause up to the 4 yearly period ending in 2003 and then the main cause changes to lightning until the end of the collection period in 2015.  Similarly arson seem reasonably popular in the southern states until 2007, when it no longer appears as the most common cause of wildfire.  This downward trend was also noted earlier in the overall causation plots for all states**
