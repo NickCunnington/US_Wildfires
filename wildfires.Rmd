@@ -916,15 +916,62 @@ fires_states %>%
 
 
 ```{r}
-#fire_florida <- fires_states %>%
-#  filter()
+fires_states %>%
+  dplyr::filter(region == "florida" & stat_cause_descr == "Railroad" & 
+           fire_year == "1992") %>%
+  leaflet() %>%
+  addTiles() %>%
+  addMarkers(lng = ~longitude, lat = ~latitude, label =
+               ~paste("Fire Size: ", fire_size, "/ Month: ", discovery_moy))
+
 ```
 
+**There is something not right with this data, it is extremely unlikely that all these fire are from railroads . So I'm going to check another random year in 1998.**
+
+
 ```{r}
-#florida <- leaflet() %>%
-#  addTiles() %>%
-#  addMarkers
+fires_states %>%
+  dplyr::filter(region == "florida" & stat_cause_descr == "Railroad" & 
+           fire_year == "1998") %>%
+  leaflet() %>%
+  addTiles() %>%
+  addMarkers(lng = ~longitude, lat = ~latitude, label =
+               ~paste("Fire Size: ", fire_size, "/ Month: ", discovery_moy))
+
 ```
+
+**The same issue is present, there is defintiely something wrong here.  Let's check some more years.**
+
+
+```{r}
+fires_states %>%
+  dplyr::filter(region == "florida" & stat_cause_descr == "Railroad" & 
+           fire_year == "2008") %>%
+  leaflet() %>%
+  addTiles() %>%
+  addMarkers(lng = ~longitude, lat = ~latitude, label =
+               ~paste("Fire Size: ", fire_size, "/ Month: ", discovery_moy))
+
+```
+
+**Now that is much better, with a lot less fires occurring and all of them next to a railroad as you would expect.  Let's check another year.**
+
+
+```{r}
+fires_states %>%
+  dplyr::filter(region == "florida" & stat_cause_descr == "Railroad" & 
+           fire_year == "2015") %>%
+  leaflet() %>%
+  addTiles() %>%
+  addMarkers(lng = ~longitude, lat = ~latitude, label =
+               ~paste("Fire Size: ", fire_size, "/ Month: ", discovery_moy))
+
+```
+
+**2015's data looks the same as 2008 and what I would expect for railroad fires, occurring next to rails and being few and far between!**
+
+
+**Having used leaflet to plot all the Lat/long coordinates for the railroad fires in 1992, 1998 ,2008 and 2015, I am doubtful of the validity of either the recorded classification of fire origin or the accuracy of the coordinates in the earlier years of the recording period.  The majority of plotted fires have been started many miles away from any railroad.  This is especially obvious for the 2 fires that occurred near Key West in 1992, which has no rail links anywhere near by only road.  The coordinates have been given to 5 decimal places, which allows a precision of 1.1 meters, so unless they have been entered into the database incorrectly, I think it is probably far more likely that an incorrect cause descriptor may have been entered for a lot of fires in the early year.  This error seems to have been rectified in the later years of the dataset, as can be seen in the 2008 and 2015 data behaving as expected as above.**
 
 
 
