@@ -121,7 +121,8 @@ fires_states %>%
   summarise(num_fires = n()) %>%
   ggplot +
   aes(x = fire_year, y = num_fires, colour = stat_cause_descr) +
-  geom_line()
+  geom_line() +
+  ylim(0,20000)
 ```
 
 
@@ -162,8 +163,8 @@ fires_arson %>%
   geom_abline(
     intercept = model2$coefficients[1],
     slope = model2$coefficients[2],
-    col = "red"
-  ) 
+    col = "red") +
+  ylim(0,20000)
 ```
 
 
@@ -210,7 +211,8 @@ fires_states %>%
   summarise(num_fires = n()) %>%
   ggplot +
   aes(x = fire_year, y = num_fires, colour = stat_cause_descr) +
-  geom_line()
+  geom_line() +
+  ylim(0,20000)
 ```
 
 ```{r}
@@ -250,8 +252,8 @@ fires_children %>%
   geom_abline(
     intercept = model3$coefficients[1],
     slope = model3$coefficients[2],
-    col = "red"
-  ) 
+    col = "red") +
+  ylim(0,20000)
 ```
 
 
@@ -280,4 +282,5 @@ bootstrap_distribution_slope3 %>%
 clean_names(tidy(model3, conf.int = TRUE, conf.level = 0.95))
 ```
 
-**The CI limits are no where near 0, so the model can be used to prove the hypothesis that there is evidence that the amount of fires started by children has been decreasing during the reporting period.**
+**The CI limits do not include 0, so the model can be used to prove the hypothesis that there is statistical evidence to suggest that the amount of fires started by children has been decreasing during the reporting period.**
+
