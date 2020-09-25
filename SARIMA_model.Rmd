@@ -17,6 +17,7 @@ library(feasts)
 ```
 
 
+
 ### In order to try and validate the model I will take out the last 4 years of data and train the model on the first 20 years only
 
 ```{r}

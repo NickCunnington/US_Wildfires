@@ -1,0 +1,283 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(modelr)
+library(broom)
+library(ggfortify)
+library(infer)
+```
+
+
+
+
+# Linear Model for amount of fires per year.
+
+### Testing hypothesis that the total number of fires has increased during the reporting period.
+
+
+```{r}
+# creating the linear model
+
+model <- lm(formula = num_fires ~ fire_year, data = year_plot)
+summary(model)
+```
+
+```{r}
+tidy(model)
+```
+
+```{r}
+clean_names(glance(model))
+```
+
+**The R Squared is quite low as expected from the widely spread plot and from the high p value we already know the model is not a good fit**
+
+
+```{r}
+# diagnostic plots
+
+autoplot(model)
+```
+
+
+**The diagnostic plots agree that the model isn't a great fit and there is likely to be a curve in the best fit line.  As this is time series data we already know this is the case.**
+
+
+```{r}
+year_plot <- year_plot %>%
+  add_predictions(model) %>%
+  add_residuals(model)
+year_plot
+```
+
+
+
+```{r}
+# plotting the model best fit line
+
+year_plot %>%
+  ggplot(aes(x = fire_year)) +
+  geom_point(aes(y = num_fires)) +
+  geom_abline(
+    intercept = model$coefficients[1],
+    slope = model$coefficients[2],
+    col = "red"
+  ) +
+  ylim(0, 120000)
+  
+```
+
+
+**The plotted best fit line does show a slight increase, but as the P value is far too high I can not accept this model as a true representation of the occuring trend**
+
+
+### Just to make sure I'm going to use bootstrapping using the same model
+
+
+```{r}
+bootstrap_distribution_slope <- year_plot %>%
+  specify(formula = num_fires ~ fire_year) %>%
+  infer::generate(reps = 10000, type = "bootstrap") %>%
+  calculate(stat = "slope")
+
+slope_ci95 <- bootstrap_distribution_slope %>%
+  get_ci(level = 0.95, type = "percentile")
+slope_ci95
+```
+
+```{r}
+bootstrap_distribution_slope %>%
+  visualise(bins = 30) +
+  shade_ci(endpoints = slope_ci95)
+```
+
+```{r}
+clean_names(tidy(model, conf.int = TRUE, conf.level = 0.95))
+```
+
+**As 0 occurs within the 95% confidence intervals of -283 to +1075 it reinforces the fact that this model can not be used to explain if there are any positive or negative trends that are occurring in this data.  It will be more use to use a model that is designed for time series and seasonal variations.  For that I shall be also requiring more data points so I will now use monthly data and not yearly.**
+
+
+
+
+
+
+
+
+# Linear model for checking change in arson related fires.
+
+### Testing hypothesis that the total number of fires due to arson has decreased during the reporting period.
+
+```{r}
+fires_states %>%
+  dplyr::select(stat_cause_descr, fire_year) %>%
+  group_by(fire_year, stat_cause_descr) %>%
+  filter(stat_cause_descr == "Arson") %>%
+  summarise(num_fires = n()) %>%
+  ggplot +
+  aes(x = fire_year, y = num_fires, colour = stat_cause_descr) +
+  geom_line()
+```
+
+
+```{r}
+#  Splitting data into individual dataframes
+
+fires_arson <- fires_states %>%
+  dplyr::select(stat_cause_descr, fire_year) %>%
+  group_by(fire_year, stat_cause_descr) %>%
+  filter(stat_cause_descr == "Arson") %>%
+  summarise(num_fires = n())
+```
+
+
+```{r}
+# creating the linear model for arson
+
+model2 <- lm(formula = num_fires ~ fire_year, data = fires_arson)
+summary(model2)
+```
+
+**The R Squared value is quite low, but that is to be expected with those large peaks in the data.  However the p-value is reasonable so we could be onto something here.**
+
+
+```{r}
+autoplot(model2)
+```
+
+**No, a linear model is definitely isn't the best fit for the data, but we knew that was going to be the case anyway with those large peaks in the data.**
+
+
+```{r}
+# Plotting best fit line
+
+fires_arson %>%
+  ggplot(aes(x = fire_year)) +
+  geom_line(aes(y = num_fires)) +
+  geom_abline(
+    intercept = model2$coefficients[1],
+    slope = model2$coefficients[2],
+    col = "red"
+  ) 
+```
+
+
+```{r}
+# Not I'll try boot strapping as well.
+
+bootstrap_distribution_slope2 <- fires_arson %>%
+  specify(formula = num_fires ~ fire_year) %>%
+  infer::generate(reps = 10000, type = "bootstrap") %>%
+  calculate(stat = "slope")
+
+slope_ci95_2 <- bootstrap_distribution_slope2 %>%
+  get_ci(level = 0.95, type = "percentile")
+slope_ci95_2
+```
+
+```{r}
+bootstrap_distribution_slope2 %>%
+  visualise(bins = 30) +
+  shade_ci(endpoints = slope_ci95_2)
+```
+
+```{r}
+clean_names(tidy(model2, conf.int = TRUE, conf.level = 0.95))
+```
+
+**Bootstrapping works a lot better.  We can see that 0 does not fall between the high and low confidence intervals so I can statistically prove the hypothesis that there has been a general decreasing trend in Arson during the reporting period.**
+
+
+
+
+
+
+# Now to model fires by Children.
+
+### Testing hypothesis that the total number of fires due to children has decreased during the reporting period.
+
+
+```{r}
+fires_states %>%
+  dplyr::select(stat_cause_descr, fire_year) %>%
+  group_by(fire_year, stat_cause_descr) %>%
+  filter(stat_cause_descr == "Children") %>%
+  summarise(num_fires = n()) %>%
+  ggplot +
+  aes(x = fire_year, y = num_fires, colour = stat_cause_descr) +
+  geom_line()
+```
+
+```{r}
+# Splitting data into individual dataframes
+
+fires_children <- fires_states %>%
+  dplyr::select(stat_cause_descr, fire_year) %>%
+  group_by(fire_year, stat_cause_descr) %>%
+  filter(stat_cause_descr == "Children") %>%
+  summarise(num_fires = n())
+```
+
+```{r}
+# creating the linear model for arson
+
+model3 <- lm(formula = num_fires ~ fire_year, data = fires_children)
+summary(model3)
+```
+
+**As the peaks aren't as high as in the arson case the R Squared values are a lot higher in this model showing a better fit.  The p-value is also very small, which is a good sign.**
+
+
+
+```{r}
+autoplot(model3)
+```
+
+**Variations in the data do show that it is not completly linear.**
+
+
+```{r}
+# Plotting best fit line
+
+fires_children %>%
+  ggplot(aes(x = fire_year)) +
+  geom_line(aes(y = num_fires)) +
+  geom_abline(
+    intercept = model3$coefficients[1],
+    slope = model3$coefficients[2],
+    col = "red"
+  ) 
+```
+
+
+```{r}
+# Now I'll try boot strapping as well.
+
+bootstrap_distribution_slope3 <- fires_children %>%
+  specify(formula = num_fires ~ fire_year) %>%
+  infer::generate(reps = 10000, type = "bootstrap") %>%
+  calculate(stat = "slope")
+
+slope_ci95_3 <- bootstrap_distribution_slope3 %>%
+  get_ci(level = 0.95, type = "percentile")
+slope_ci95_3
+```
+
+```{r}
+bootstrap_distribution_slope3 %>%
+  visualise(bins = 30) +
+  shade_ci(endpoints = slope_ci95_3)
+```
+
+
+
+```{r}
+clean_names(tidy(model3, conf.int = TRUE, conf.level = 0.95))
+```
+
+**The CI limits are no where near 0, so the model can be used to prove the hypothesis that there is evidence that the amount of fires started by children has been decreasing during the reporting period.**
