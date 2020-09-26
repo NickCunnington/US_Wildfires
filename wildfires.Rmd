@@ -151,7 +151,7 @@ fires_small %>%
   aes(x = year_month, y = num_fires) +
   geom_line(col = "dark blue") +
   ggtitle("Amount of fires per month 1992-2015\n") + 
-  xlab("\nTime") +
+  xlab("\nYear") +
   ylab("Number of Fires\n") +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5))
@@ -189,7 +189,7 @@ fires_small %>%
   aes(x = discovery_date, y = num_fires) +
   geom_line(col = "dark blue") +
   ggtitle("Amount of fires per day 1992-2015\n") + 
-  xlab("\nTime") +
+  xlab("\nYear") +
   ylab("Number of Fires\n") +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5))
