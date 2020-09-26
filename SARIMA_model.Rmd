@@ -138,10 +138,16 @@ log_monthly_test
 ```{r}
 # Plotting actual vs predicted values for 2011-2015
 
+
 log_monthly_test %>%
   ggplot(aes(x = year_month)) +
   geom_line(aes(y = num_fires), col = "black") +
-  geom_line(aes(y = forecast), col = "red")
+  geom_line(aes(y = forecast), col = "red") +
+  ggtitle("Predicted (Red) vs Actual (Black) fires per month (2012 - 2015)\n") + 
+  labs(x = "\nYear", y = "Number of Fires\n") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+  
 ```
 
 **The SARIMA model works pretty well when compared with the actual last 4 years worth of data.  It clearly has understood the seasonal variation which is present and has predicted values with a reasonable accuracy. It still shows a double peak each year, which I assumed earlier when looking at the month of year data could be due to coinciding with school Spring and Summer breaks.  This model also does not support the hypothesis that there is a general increasing or decreasing trend of fires over the reporting period, so I am happy to accept that apart from local environmental, human interaction, climate or other external factors making some variations each year there doesn't seem to be any general trend present at all.**

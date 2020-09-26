@@ -4,7 +4,7 @@ output: html_notebook
 ---
 
 ```{r}
-library(tidyverse)
+library(tidyverse) 
 library(janitor)
 library(modelr)
 library(broom)
@@ -68,7 +68,12 @@ year_plot %>%
     slope = model$coefficients[2],
     col = "red"
   ) +
-  ylim(0, 120000)
+  ylim(0, 120000) +
+  ggtitle("Amount of fires per year, 1992-2015\n") + 
+  xlab("\nYear") +
+  ylab("Number of Fires\n") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
   
 ```
 
@@ -122,7 +127,13 @@ fires_states %>%
   ggplot +
   aes(x = fire_year, y = num_fires, colour = stat_cause_descr) +
   geom_line() +
-  ylim(0,20000)
+  ylim(0,20000) +
+  ggtitle("Amount of fires per year from Arson (1992-2015)\n") + 
+  xlab("\nYear") +
+  ylab("Number of Fires\n") +
+  labs(colour = "Cause of fire") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 
@@ -164,7 +175,12 @@ fires_arson %>%
     intercept = model2$coefficients[1],
     slope = model2$coefficients[2],
     col = "red") +
-  ylim(0,20000)
+  ylim(0,20000) +
+  ggtitle("Amount of fires per year by Arson (1992-2015)\n") + 
+  xlab("\nYear") +
+  ylab("Number of Fires\n") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 
@@ -212,7 +228,13 @@ fires_states %>%
   ggplot +
   aes(x = fire_year, y = num_fires, colour = stat_cause_descr) +
   geom_line() +
-  ylim(0,20000)
+  ylim(0,20000) +
+  ggtitle("Amount of fires per year by Children (1992-2015)\n") + 
+  xlab("\nYear") +
+  ylab("Number of Fires\n") +
+  labs(colour = "Cause of fire") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ```{r}
@@ -253,7 +275,12 @@ fires_children %>%
     intercept = model3$coefficients[1],
     slope = model3$coefficients[2],
     col = "red") +
-  ylim(0,20000)
+  ylim(0,20000) +
+  ggtitle("Amount of fires per year by Children (1992-2015)\n") + 
+  xlab("\nYear") +
+  ylab("Number of Fires\n") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 

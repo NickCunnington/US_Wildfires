@@ -122,7 +122,12 @@ year_plot %>%
   ggplot +
   aes(x = fire_year, y = num_fires) +
   geom_point() +
-  ylim(0, 120000)
+  ylim(0, 120000) +
+  ggtitle("Amount of fires per year 1992-2015\n") + 
+  xlab("\nYear") +
+  ylab("Number of Fires\n") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
 
 ```
 **There is a lot of variation in the data between years.  Visually it looks like a repeating pattern is occurring every 5 years or so with 4 peaks visible within this reporting period.  Having looked at the historic weather for that date range these peaks seems to coincide with recorded heatwaves in 2000, 2006 and 2011.(1)**
@@ -144,7 +149,12 @@ fires_small %>%
   summarise(num_fires = n()) %>%
   ggplot +
   aes(x = year_month, y = num_fires) +
-  geom_line(col = "dark blue")
+  geom_line(col = "dark blue") +
+  ggtitle("Amount of fires per month 1992-2015\n") + 
+  xlab("\nTime") +
+  ylab("Number of Fires\n") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 **Peaks are still shown to be occurring in the summers. The 2006 heatwave is especially visible.**
@@ -177,7 +187,12 @@ fires_small %>%
   summarise(num_fires = n()) %>%
   ggplot +
   aes(x = discovery_date, y = num_fires) +
-  geom_line(col = "dark blue") 
+  geom_line(col = "dark blue") +
+  ggtitle("Amount of fires per day 1992-2015\n") + 
+  xlab("\nTime") +
+  ylab("Number of Fires\n") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
 
 ```
 
@@ -195,7 +210,12 @@ fires_small %>%
   group_by(discovery_doy) %>%
   summarise(num_fires = n()) %>%
   ggplot(aes(x = discovery_doy, y = num_fires)) +
-  geom_line(col = "dark blue")
+  geom_line(col = "dark blue") +
+  ggtitle("Amount of fires per day of year, for combined years 1992-2015\n") + 
+  xlab("\nDay of Year") +
+  ylab("Number of Fires\n") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 
@@ -220,7 +240,12 @@ fires_small %>%
   group_by(discovery_moy) %>%
   summarise(num_fires = n()) %>%
   ggplot(aes(x = discovery_moy, y = num_fires)) +
-  geom_col(fill = "dark blue", col = "white")
+  geom_col(fill = "dark blue", col = "white") +
+  ggtitle("Amount of fires per month of year, for combined years 1992-2015\n") + 
+  xlab("\nMonth of Year") +
+  ylab("Number of Fires\n") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 **There are 2 definite peaks during the year.  March and April are possibly due to the US "Spring Break", where schools and Universities are stopped and so families are likely to be on vacation during that period possibly visiting National Parks.  July and August is also Summer Break for school with both families visiting Parks and hot weather likely causes of fire outbreaks.  I will have a look at the data and see if there is anything related to vacation time that could corroborate this.**
@@ -272,7 +297,13 @@ fires_small %>%
   ggplot +
   aes(reorder(x = stat_cause_descr, num_fires), y = num_fires) +
   geom_col(fill = "dark blue") + 
-  coord_flip() 
+  coord_flip() +
+  ggtitle("Amount of fires by cause, for combined years 1992-2015\n") + 
+  xlab("Cause of fire\n") +
+  ylab("\nNumber of Fires") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+  
 ```
 
 
@@ -285,7 +316,12 @@ fires_small %>%
   ggplot +
   aes(reorder(x = stat_cause_descr, avg_size), y = avg_size) +
   geom_col(fill = "dark blue") + 
-  coord_flip()
+  coord_flip() +
+  ggtitle("Average size of fire per cause, for combined years 1992-2015\n") + 
+  xlab("Cause of fire\n") +
+  ylab("\nSize of fire (Square Miles)") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 
@@ -295,7 +331,7 @@ fires_small %>%
 fires_small %>%
   summarise(num_na = sum(is.na(cont_date)))
 ```
-*Literally half the data is missing for burn time, making it very difficult to do any meaningful analysis*
+*Literally half the data is missing for burn time, making it very difficult to do any meaningful analysis so I shall not consider burn time at this time.*
 
 
 
@@ -308,14 +344,21 @@ fires_small %>%
   summarise(num_fires = n()) %>%
   ggplot +
   aes(x = fire_size_class, y = num_fires, fill = fire_size_class) +
-  geom_col() +
-  scale_fill_manual(values = c("red", "orange", "yellow", "green", "blue", 
-                               "purple", "black"),
+  geom_col(col = "black") +
+  scale_fill_manual(values = c("#016450", "#02818a", "#3690c0", "#67a9cf",
+                               "#a6bddb", "#d0d1e6","#f6eff7"),
                     name = "Fire Size Classification",
                     breaks = c("A", "B", "C", "D", "E", "F", "G"),
-                    labels = c("A: < 1/4 acre", "B: 1/4 to 10 acres", "C: 10 to 100 acres",
-                               "D: 100 to 300 acres", "E: 300 to 1000 acres",
-                               "F: 1000 to 5000 acres", "G: More than 5000 acres"))
+                    labels = c("A: < 1/4 acre", "B: 1/4 to 10 acres", 
+                               "C: 10 to 100 acres", "D: 100 to 300 acres", 
+                               "E: 300 to 1000 acres", "F: 1000 to 5000 acres", 
+                               "G: More than 5000 acres")) +
+  ggtitle("Amount of fires types in the years 1992-2015\n") + 
+  xlab("\nFire Size Classification") +
+  ylab("Number of Fires\n") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+  
 
 ```
 
@@ -726,7 +769,13 @@ fires_states %>%
   summarise(num_fires = n()) %>%
   ggplot +
   aes(x = fire_year, y = num_fires, colour = stat_cause_descr) +
-  geom_line()
+  geom_line() +
+  ggtitle("Amount of fires by cause, for years 1992-2015\n") + 
+  xlab("\nYear") +
+  ylab("Number of Fires\n") +
+  labs(colour = "Cause of fire") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 **The 2 large peaks in Arson are obvious in 1999 and 2006. There was a large heatwave in 2006, but I'm not sure why this would result in an increase in arson.  Perhaps there wasn't an actual increase in the amount of arson, but it could have been due to the heatwave making the ground drier than normal creating extra fuel to aid the spread of fires that would have normally not resulted in a large scale fire.  This may also be the same reason that there is also another peak in 2006 for Equipment Use.  Arson however does look to be decreasing since 2006, as does children.  Other wise most of the other causes of wildfires seem to be reasonably stable.  Perhaps we shall try modelling arson and children relatd fires to see if we can identify a general trend.**
@@ -745,7 +794,13 @@ fires_states %>%
   summarise(num_fires = n()) %>%
   ggplot +
   aes(x = fire_year, y = num_fires, colour = stat_cause_descr) +
-  geom_line()
+  geom_line() +
+  ggtitle("Amount of fires by cause, for years 1992-2015\n") + 
+  xlab("\nYear") +
+  ylab("Number of Fires\n") +
+  labs(colour = "Cause of fire") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 **Similar peaks can be seen in Debris, Miscellaneous and lightning in the heatwave of 2006 that left the ground very dry.  There are peaks from 1997 to 2003 in debris, miscellaneous and lightening, but also a trough in missing/undefined, so this is likely to be due to more accurate classification of fires and not using the missing/undefined category as much.**
@@ -1037,11 +1092,6 @@ fires_states %>%
   ggtitle("Months with most fires per State 1992-2015") +
   theme(plot.title = element_text(hjust = 0.5))
 ```
-
-```{r}
-ggsave("months_total.png")
-```
-
 
 
 ```{r}
