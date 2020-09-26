@@ -971,7 +971,7 @@ fires_states %>%
 **2015's data looks the same as 2008 and what I would expect for railroad fires, occurring next to rails and being few and far between!**
 
 
-**Having used leaflet to plot all the Lat/long coordinates for the railroad fires in 1992, 1998 ,2008 and 2015, I am doubtful of the validity of either the recorded classification of fire origin or the accuracy of the coordinates in the earlier years of the recording period.  The majority of plotted fires have been started many miles away from any railroad.  This is especially obvious for the 2 fires that occurred near Key West in 1992, which has no rail links anywhere near by only road.  The coordinates have been given to 5 decimal places, which allows a precision of 1.1 meters, so unless they have been entered into the database incorrectly, I think it is probably far more likely that an incorrect cause descriptor may have been entered for a lot of fires in the early year.  This error seems to have been rectified in the later years of the dataset, as can be seen in the 2008 and 2015 data behaving as expected as above.**
+**Having used leaflet to plot all the Lat/long coordinates for the railroad fires in 1992, 1998, 2008 and 2015, I am doubtful of the validity of either the recorded classification of fire origin or the accuracy of the coordinates in the earlier years of the recording period.  The majority of plotted fires have been started many miles away from any railroad.  This is especially obvious for the 2 fires that occurred near Key West in 1992, which has no rail links anywhere near by only road.  The coordinates have been given to 5 decimal places, which allows a precision of 1.1 meters, so unless they have been entered into the database incorrectly I think it is probably far more likely that an incorrect cause descriptor may have been entered for a lot of fires in the earlier years.  This error seems to have been rectified in the later years of the dataset, as can be seen in the 2008 and 2015 data behaving as expected as above.**
 
 
 
@@ -1033,8 +1033,37 @@ fires_states %>%
   geom_polygon() +
   geom_path(color = "white") +
   theme_map() +
-  scale_fill_brewer(name = "Months of Year", palette = "PuBuGn")
+  scale_fill_brewer(name = "Months of Year", palette = "PuBuGn") +
+  ggtitle("Months with most fires per State 1992-2015") +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
+
+```{r}
+ggsave("months_total.png")
+```
+
+
+
+```{r}
+fires_states %>%
+  filter(fire_year == "1992" | fire_year == "1993" | fire_year == "1994" |
+           fire_year == "1995") %>%
+  select(region, discovery_moy) %>%
+  group_by(region, discovery_moy) %>%
+  summarise(num_fire = n()) %>%
+  top_n(1) %>%
+  right_join(state_map, by = "region") %>%
+  ggplot +
+  (aes(x = long, y = lat, group = group, fill = discovery_moy)) +
+  geom_polygon() +
+  geom_path(color = "white") +
+  theme_map() +
+  scale_fill_brewer(name = "Months of Year", palette = "PuBuGn") +
+  ggtitle("Month with most fires per State 1992-1995") +
+  theme(plot.title = element_text(hjust = 0.5)) 
+  # theme(legend.position = "left")
+```
+
 
 
 ```{r}
@@ -1057,6 +1086,7 @@ fires_states %>%
 ```
 
 
+
 ```{r}
 fires_states %>%
   filter(fire_year == "2000" | fire_year == "2001" | fire_year == "2002" |
@@ -1075,6 +1105,7 @@ fires_states %>%
   ggtitle("Month with most fires per State 2000-2003") +
   theme(plot.title = element_text(hjust = 0.5))
 ```
+
 
 
 ```{r}
@@ -1097,6 +1128,7 @@ fires_states %>%
 ```
 
 
+
 ```{r}
 fires_states %>%
   filter(fire_year == "2008" | fire_year == "2009" | fire_year == "2010" |
@@ -1115,6 +1147,7 @@ fires_states %>%
   ggtitle("Month with most fires per State 2008-2011") +
   theme(plot.title = element_text(hjust = 0.5))
 ```
+
 
 
 ```{r}
@@ -1136,25 +1169,6 @@ fires_states %>%
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-
-```{r}
-fires_states %>%
-  filter(fire_year == "2010" | fire_year == "2011" | fire_year == "2012" |
-           fire_year == "2013" | fire_year == "2014" | fire_year == "2015") %>%
-  select(region, discovery_moy) %>%
-  group_by(region, discovery_moy) %>%
-  summarise(num_fire = n()) %>%
-  top_n(1) %>%
-  right_join(state_map, by = "region") %>%
-  ggplot +
-  (aes(x = long, y = lat, group = group, fill = discovery_moy)) +
-  geom_polygon() +
-  geom_path(color = "white") +
-  theme_map() +
-  scale_fill_brewer(name = "Months of Year", palette = "PuBuGn") +
-  ggtitle("Month with most fires in per State 2010-2015") +
-  theme(plot.title = element_text(hjust = 0.5))
-```
 
 
 **The above plots are quite interesting.  The months of the year that have the most seems to widely change in certain state.  Mainly the east half of the country have the most fires in the Spring (Feb-May) and the western part of the country have the most fires later on in Summer and Fall (Jun-Oct).  There are however a few exceptions that can be seen in the 2004-2007 and 2008-2011 data Texas has the most fires in January.  Florida also mostly conformed to the East/West split with the majority of its worst months for fires taking place in March or April up until 2007, then the most common month moves later into June and July for the rest of the reporting period until 2015. This may have to due with main cause of fires in Florida changing from railroad to lightning related about the same time, as we noted earlier on when looking at causation.  As July is the main month for tropical storms and lightning in Florida this is a possible cause for the highest month becoming later in the year than before. (2)**
