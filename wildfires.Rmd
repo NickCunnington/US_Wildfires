@@ -122,6 +122,7 @@ year_plot %>%
   ggplot +
   aes(x = fire_year, y = num_fires) +
   geom_point() +
+  geom_line() +
   ylim(0, 120000) +
   ggtitle("Amount of fires per year 1992-2015\n") + 
   xlab("\nYear") +
@@ -240,7 +241,7 @@ fires_small %>%
   group_by(discovery_moy) %>%
   summarise(num_fires = n()) %>%
   ggplot(aes(x = discovery_moy, y = num_fires)) +
-  geom_col(fill = "dark blue", col = "white") +
+  geom_col(fill = "dark blue", col = "black") +
   ggtitle("Amount of fires per month of year, for combined years 1992-2015\n") + 
   xlab("\nMonth of Year") +
   ylab("Number of Fires\n") +
@@ -426,7 +427,7 @@ fires_states %>%
 
 #### There does seem to be 22,147 NAs in the 'region' column we just made.  Scrolling through there are 2 missing States of 'PR' and 'DC' in the `states_list` tibble.
 
-#### After some quick research it seems that there are only 50 States in the US. Washington DC is techincally not counted as a state but as a Federal District, as it is the seat of government, so that was why it wasn't included in the `States` tibble originally.  PR is Puerto Rico and is also not a state but the largest US territory .
+#### After some quick research it seems that there are only 50 States in the US. Washington DC is techincally not counted as a state but as a Federal District, as it is the seat of government, so that was why it wasn't included in the `States` tibble originally.  PR is Puerto Rico and is also not a state but the largest US territory.
 
 
 #### I shall add DC and PR into the state_list and re-join it.
@@ -1070,6 +1071,8 @@ fires_states %>%
 ```
 
 **From the plots we can see that the Western states have the most small fires and also the most large fires!  Not entirely the most helpful plots...**
+
+
 
 
 
