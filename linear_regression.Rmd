@@ -248,7 +248,7 @@ fires_children <- fires_states %>%
 ```
 
 ```{r}
-# creating the linear model for arson
+# creating the linear model for children
 
 model3 <- lm(formula = num_fires ~ fire_year, data = fires_children)
 summary(model3)
@@ -310,4 +310,92 @@ clean_names(tidy(model3, conf.int = TRUE, conf.level = 0.95))
 ```
 
 **The CI limits do not include 0, so the model can be used to prove the hypothesis that there is statistical evidence to suggest that the amount of fires started by children has been decreasing during the reporting period.**
+
+
+
+# Modelling fire by Burning Debris
+
+### Testing hypothesis that the total number of fires due to burning debris has inceased during the reporting period.
+
+
+```{r}
+fires_states %>%
+  dplyr::select(stat_cause_descr, fire_year) %>%
+  group_by(fire_year, stat_cause_descr) %>%
+  filter(stat_cause_descr == "Debris Burning") %>%
+  summarise(num_fires = n()) %>%
+  ggplot +
+  aes(x = fire_year, y = num_fires, colour = stat_cause_descr) +
+  geom_line() +
+  ylim(0,27000) +
+  ggtitle("Amount of fires per year by Debris Burning (1992-2015)\n") + 
+  xlab("\nYear") +
+  ylab("Number of Fires\n") +
+  labs(colour = "Cause of fire") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+# Splitting data into individual dataframes
+
+fires_debris <- fires_states %>%
+  dplyr::select(stat_cause_descr, fire_year) %>%
+  group_by(fire_year, stat_cause_descr) %>%
+  filter(stat_cause_descr == "Debris Burning") %>%
+  summarise(num_fires = n())
+```
+
+```{r}
+# creating the linear model for debris
+
+model4 <- lm(formula = num_fires ~ fire_year, data = fires_debris)
+summary(model4)
+```
+
+```{r}
+autoplot(model4)
+```
+
+```{r}
+# Plotting best fit line
+
+fires_debris %>%
+  ggplot(aes(x = fire_year)) +
+  geom_line(aes(y = num_fires)) +
+  geom_abline(
+    intercept = model4$coefficients[1],
+    slope = model4$coefficients[2],
+    col = "red") +
+  ylim(0,27000) +
+  ggtitle("Amount of fires per year by Debris Burning (1992-2015)\n") + 
+  xlab("\nYear") +
+  ylab("Number of Fires\n") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+# Now I'll try boot strapping as well.
+
+bootstrap_distribution_slope4 <- fires_debris %>%
+  specify(formula = num_fires ~ fire_year) %>%
+  infer::generate(reps = 10000, type = "bootstrap") %>%
+  calculate(stat = "slope")
+
+slope_ci95_4 <- bootstrap_distribution_slope4 %>%
+  get_ci(level = 0.95, type = "percentile")
+slope_ci95_4
+```
+
+```{r}
+bootstrap_distribution_slope4%>%
+  visualise(bins = 30) +
+  shade_ci(endpoints = slope_ci95_4)
+```
+
+
+```{r}
+clean_names(tidy(model4, conf.int = TRUE, conf.level = 0.95))
+```
 
