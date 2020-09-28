@@ -996,7 +996,7 @@ fires_states %>%
 
 ```
 
-**The same issue is present, there is defintiely something wrong here.  Let's check some more years.**
+**The same issue is present, there is definitely something wrong here.  Let's check some more years.**
 
 
 ```{r}
