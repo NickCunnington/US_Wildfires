@@ -131,6 +131,7 @@ year_plot %>%
   theme(plot.title = element_text(hjust = 0.5))
 
 ```
+
 **There is a lot of variation in the data between years.  Visually it looks like a repeating pattern is occurring every 5 years or so with 4 peaks visible within this reporting period.  Having looked at the historic weather for that date range these peaks seems to coincide with recorded heatwaves in 2000, 2006 and 2011.(1)**
 
 https://en.wikipedia.org/wiki/List_of_heat_waves
@@ -486,13 +487,12 @@ fires_joined %>%
     (aes(x = long, y = lat, group = group, fill = num_fires)) + 
     geom_polygon() + 
     geom_path(color = "white") + 
-    scale_fill_distiller(name = "Fire per Sq Mile", palette = "PuBuGn") + 
+    scale_fill_distiller(name = "Number of Fires", palette = "PuBuGn") + 
     theme_map() + 
     coord_map("mollweide") +  
     ggtitle("Total US Wildfires from 1992-2015") + 
     theme(plot.title = element_text(hjust = 0.5))
 ```
-
 
 # 3. Geo Spatial Visualisations
 
@@ -723,6 +723,16 @@ fires_states <- fires_small %>%
 ```{r}
 fires_states %>%
   select(region, area) %>%
+  group_by(region) %>%
+  summarise(num_fires = n()) %>%
+  arrange(desc(num_fires))
+```
+
+
+
+```{r}
+fires_states %>%
+  select(region, area) %>%
   group_by(region, area) %>%
   summarise(num_fires = n()) %>%
   mutate(fires_sqmile = num_fires / area) %>%
@@ -749,6 +759,7 @@ fires_states %>%
   ggtitle(paste0("Total US Wildfires per Square Mile from 1992-2015")) + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
+
 
 **Puerto Rico is not shown on this map, but visually we can see the data for the other 51 entries, and the south eastern states still have the highest proportion of wildfires.  Interestingly New Jersey also shows has a hotspot in the NE of the country.**
 
@@ -779,7 +790,7 @@ fires_states %>%
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-**The 2 large peaks in Arson are obvious in 1999 and 2006. There was a large heatwave in 2006, but I'm not sure why this would result in an increase in arson.  Perhaps there wasn't an actual increase in the amount of arson, but it could have been due to the heatwave making the ground drier than normal creating extra fuel to aid the spread of fires that would have normally not resulted in a large scale fire.  This may also be the same reason that there is also another peak in 2006 for Equipment Use.  Arson however does look to be decreasing since 2006, as does children.  Other wise most of the other causes of wildfires seem to be reasonably stable.  Perhaps we shall try modelling arson and children relatd fires to see if we can identify a general trend.**
+**The 2 large peaks in Arson are obvious in 1999 and 2006. There was a large heatwave in 2006, but I'm not sure why this would result in an increase in arson.  Perhaps there wasn't an actual increase in the amount of arson, but it could have been due to the heatwave making the ground drier than normal creating extra fuel to aid the spread of fires that would have normally not resulted in a large scale fire.  This may also be the same reason that there is also another peak in 2006 for Equipment Use.  Arson however does look to be decreasing since 2006, as does children.  Other wise most of the other causes of wildfires seem to be reasonably stable.  Perhaps we shall try modelling arson and children related fires to see if we can identify a general trend.**
 
 
 #### And this one for natural occuring fires.

@@ -182,6 +182,10 @@ fires_arson %>%
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5))
 ```
+```{r}
+ggsave("arson_model.png", width = 11, height = 7)
+```
+
 
 
 ```{r}

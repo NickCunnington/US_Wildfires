@@ -150,6 +150,7 @@ log_monthly_test %>%
   
 ```
 
+
 **The SARIMA model works pretty well when compared with the actual last 4 years worth of data.  It clearly has understood the seasonal variation which is present and has predicted values with a reasonable accuracy. It still shows a double peak each year, which I assumed earlier when looking at the month of year data could be due to coinciding with school Spring and Summer breaks.  This model also does not support the hypothesis that there is a general increasing or decreasing trend of fires over the reporting period, so I am happy to accept that apart from local environmental, human interaction, climate or other external factors making some variations each year there doesn't seem to be any general trend present at all.**
 
 
