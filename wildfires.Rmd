@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "US Wildfire dataset 1992-2015"
 output: html_notebook
 ---
 
@@ -27,10 +27,14 @@ library(tidyverse)
 library(leaflet)
 ```
 
+# Initial data cleaning in separate file
+
+<br>
 
 
-# 2. Creating some initial visualisations
+## 2. Creating some initial visualisations
 
+<br>
 
 ### Fires per year
 
@@ -55,21 +59,29 @@ year_plot %>%
 
 **There is a lot of variation in the data between years.  Visually it looks like a repeating pattern is occurring every 5 years or so with 4 peaks visible within this reporting period.  Having looked at the historic weather for that date range these peaks seems to coincide with recorded heatwaves in 2000, 2006 and 2011.(1)**
 
-https://en.wikipedia.org/wiki/List_of_heat_waves
+(1) https://en.wikipedia.org/wiki/List_of_heat_waves
 
 
-#### I will try to create a linear model to hopefully show any increase or decrease of fires over time (see seperate workbook).  As this is time series data a linear model will not fit, but it could be interesting to see if it identifies a general underlying trend.
+**I will try to create a linear model to hopefully show any increase or decrease of fires over time (see seperate workbook).  As this is time series data a linear model will not fit, but it could be interesting to see if it identifies a general underlying trend.**
 
-
+<br>
 
 
 ### Fires per month
 
+
 ```{r}
-fires_small %>%
+monthly <- fires_small %>%
   mutate(year_month = make_date(fire_year, discovery_moy)) %>%
   group_by(year_month) %>%
-  summarise(num_fires = n()) %>%
+  summarise(num_fires = n())
+
+monthly
+```
+
+
+```{r}
+monthly %>%
   ggplot +
   aes(x = year_month, y = num_fires) +
   geom_line(col = "dark blue") +
@@ -82,24 +94,9 @@ fires_small %>%
 
 **Peaks are still shown to be occurring in the summers. The 2006 heatwave is especially visible.**
 
+**Seasonal Model applied on a separate worksheet**
 
-
-### Using the SARIMA model.
-
-```{r}
-monthly <- fires_small %>%
-  mutate(year_month = make_date(fire_year, discovery_moy)) %>%
-  group_by(year_month) %>%
-  summarise(num_fires = n())
-
-write_csv(monthly, path = "clean_data/monthly.csv")
-
-monthly
-```
-
-**Continued on seperate worksheet**
-
-
+<br>
 
 
 ### Fires per day
@@ -116,12 +113,11 @@ fires_small %>%
   ylab("Number of Fires\n") +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5))
-
 ```
 
 **This shows a typical time series plot with a cyclic variation due to warmer weather in the summer time.**
 
-
+<br>
 
 
 
@@ -144,6 +140,9 @@ fires_small %>%
 
 **The are peaks around day 60-110 and a big peak around 180.**
 
+<br>
+
+
 #### Checking the data to see exactly where the peak occurs
 
 ```{r}
@@ -153,6 +152,8 @@ fires_small %>%
   arrange(desc(num_fires))
 ```
 **The 2 highest days of the year are on 185 and 186, which happens to be Independence Day (4th July) on a normal year and a leap year retrospectively.  So I imagine most of the extra fires (literally over double the normal amount) are caused by fireworks.**
+
+<br>
 
 
 
@@ -171,12 +172,12 @@ fires_small %>%
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-**There are 2 definite peaks during the year.  March and April are possibly due to the US "Spring Break", where schools and Universities are stopped and so families are likely to be on vacation during that period possibly visiting National Parks.  July and August is also Summer Break for school with both families visiting Parks and hot weather likely causes of fire outbreaks.  I will have a look at the data and see if there is anything related to vacation time that could corroborate this.**
+**There are 2 definite peaks during the year.  March and April are possibly due to the US "Spring Break", where schools and Universities are stopped and so families are likely to be on vacation during that period possibly visiting National Parks.  July and August is also Summer Break for school with both families visiting Parks and hot weather likely causes of fire outbreaks (3).  I will have a look at the data and see if there is anything related to vacation time that could corroborate this.**
 
 
-https://en.wikipedia.org/wiki/School_holidays_in_the_United_States
+(3) https://en.wikipedia.org/wiki/School_holidays_in_the_United_States
 
-
+<br>
 
 ```{r}
 mar_apr_causes <- fires_small %>%
@@ -203,7 +204,7 @@ mar_apr_causes
 
 **Although there is a large increase in fires due to debris burning, arson and miscellaneous in March and April, in May and June the number of fires by children, campfire and smoking is all higher so there is no definite proof that school breaks are to cause for the spikes in March and April each year over the whole data period.**
 
-
+<br>
 
 
 
@@ -229,6 +230,7 @@ fires_small %>%
   
 ```
 
+<br>
 
 ### Fire avg size by cause
 
@@ -247,6 +249,8 @@ fires_small %>%
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
+<br>
+
 
 ### Avg burn time by cause
 
@@ -254,9 +258,10 @@ fires_small %>%
 fires_small %>%
   summarise(num_na = sum(is.na(cont_date)))
 ```
-*Literally half the data is missing for burn time, making it very difficult to do any meaningful analysis so I shall not consider burn time at this time.*
+**Literally half the data is missing for burn time, making it very difficult to do any meaningful analysis so I shall not consider burn time at this time.**
 
 
+<br>
 
 ### Fires by size
 
@@ -285,13 +290,16 @@ fires_small %>%
 
 ```
 
+<br>
 
 
 # Geo Spatial wrangling 
 
+<br>
 
 ### To make it easier to visually detect frequency of wildfires between states I want display it in a map format.  As I'm using ggplot2 already I'm going to also use it for maps with the `geom_polygon()`, `coord_map()` along with the ggthemes `theme_map()` functions.
 
+<br>
 
 #### I'm not entirely sure what geo-spatial information is being held with in the sqlite database file, I've made a few attempts to retrieve it but have been unsuccessful.  Therefore I'm going to utelise the `datasets` package which includes various bits of information on the US States, including coordinates for state boundaries.
 
@@ -303,6 +311,7 @@ state_map <- map_data("state")
 state_map
 ```
 
+<br>
 
 #### Annoyingly it doesn't have the abbreviation of the State, only the full name so I need to add that in.  Luckily the 'datasets' package also has a vector of States names and abbreviations so I shall make a tibble with them both in.
 
@@ -319,6 +328,7 @@ state.name
 state_list <- tibble(state = state.abb, state_name = state.name)
 state_list
 ```
+<br>
 
 
 #### The `state_map` dataframe is in lower case and has the column name 'region'.  I shall change the `state_list` tibble to be the same format so they can be joined together.
@@ -327,6 +337,8 @@ state_list
 ```{r}
 state_list <- tibble(state = state.abb, region = tolower(state.name))
 ```
+
+<br>
 
 
 #### Joing `state_list` to `fires_small` datasets
@@ -338,6 +350,8 @@ fires_states <- fires_small %>%
 fires_states
 ```
 
+<br>
+
 
 #### Checking the join has worked and there are no missing values.
 
@@ -346,11 +360,14 @@ fires_states %>%
   filter(is.na(region))
 ```
 
+<br>
 
 #### There does seem to be 22,147 NAs in the 'region' column we just made.  Scrolling through there are 2 missing States of 'PR' and 'DC' in the `states_list` tibble.
 
 #### After some quick research it seems that there are only 50 States in the US. Washington DC is techincally not counted as a state but as a Federal District, as it is the seat of government, so that was why it wasn't included in the `States` tibble originally.  PR is Puerto Rico and is also not a state but the largest US territory.
 
+
+<br>
 
 #### I shall add DC and PR into the state_list and re-join it.
 
@@ -386,6 +403,7 @@ fires_states %>%
 #  right_join(state_map, by = "region")
 ```
 
+<br>
 
 #### The data set and geo information is too big to join so I'm going to do a summarise first to get the number of fires per region first.
 
@@ -398,6 +416,8 @@ fires_joined <- fires_states %>%
 ```
 
 **Result!!  Now doing first geo spatial visualisation**
+
+<br>
 
 
 ### Total Wildfires per state from 1992-2015
@@ -415,10 +435,17 @@ fires_joined %>%
     theme(plot.title = element_text(hjust = 0.5))
 ```
 
+<br>
+
+
+
 # 3. Geo Spatial Visualisations
+
+<br>
 
 ### The dataset has a cause of fire column so I shall now create some causation plots.
 
+<br>
 
 #### Getting list of fire causes
 
@@ -428,6 +455,7 @@ fires_states %>%
   arrange(-desc(stat_cause_descr))
 ```
 
+<br>
 
 ### Total fire by cause in tabular form
 
@@ -440,6 +468,8 @@ fires_states %>%
   
 ```
 
+<br>
+
 ### Number of fires by state in tabular form
 
 ```{r}
@@ -450,6 +480,7 @@ fires_states %>%
   arrange(desc(num_fires))
 ```
 
+<br>
 
 #### As the cause needs to be filtered before the map join, I'm going to either going to have to repeat a whole load of the same code in every single plot or write a function that will do it for me with, saving a lot of typing!
 
@@ -475,6 +506,7 @@ cause <- function(cause) {
 }
 ```
 
+<br>
 
 
 ### Wildfires caused by Arson
@@ -485,6 +517,8 @@ cause("Arson")
 
 **Arson does seem more prevalent in the SE states of Mississippi, Georgia, Alabama and also the western state of California.**
 
+<br>
+
 
 ### Wildfires caused by Campfire
 
@@ -493,6 +527,8 @@ cause("Campfire")
 ```
 
 **Campfires are the most prevalent in the Western states of Oregon, California and Arizona.**
+
+<br>
 
 
 ### Wildfires caused by Children
@@ -503,6 +539,8 @@ cause("Children")
 
 **Fires by children are spread about the country, but the most prevalent states are California in the West, Alabama and South Carolina and New Jersey in the east.**
 
+<br>
+
 
 ### Wildfires caused by Debris Burning
 
@@ -512,6 +550,8 @@ cause("Debris Burning")
 
 **Fires by burning debris are mostly in the southern warmer states of Texas, Georgia and North Carolina.**
 
+<br>
+
 
 ### Wildfires caused by Equiment Use
 
@@ -519,6 +559,8 @@ cause("Debris Burning")
 cause("Equipment Use")
 ```
 **Most of the fires caused by equipment seem to be in California**
+
+<br>
 
 
 ### Wildfires caused by Fireworks
@@ -528,6 +570,8 @@ cause("Fireworks")
 ```
 
 **Most of the fires caused by fireworks seem to be in the north of the country.  Primarily South Dakota, Montana and Washington state.**
+
+<br>
 
 
 
@@ -539,6 +583,8 @@ cause("Lightning")
 
 **Apart from a hotspot of lightning strikes in Florida, the vast majority of fires caused by lightning are in the West of the country.  With the 3 most affected states being California, Oregon and Arizona.**
 
+<br>
+
 
 ### Wildfires caused by Miscellious
 
@@ -547,6 +593,8 @@ cause("Miscellaneous")
 ```
 
 **There seems to be quite a few miscellaneous classifications in California, Texas and New York.**
+
+<br
 
 
 ### Wildfires caused by Missing/Undefined
@@ -557,6 +605,8 @@ cause("Missing/Undefined")
 
 **The states with the most missing or undefined data is North and South Carolina, Oklahoma and California.**
 
+<br>
+
 
 ### Wildfires caused by Powerline
 
@@ -564,10 +614,12 @@ cause("Missing/Undefined")
 cause("Powerline")
 ```
 
-**Texas has the largest amount of wildfires caused by powerlines.  This is possibly due to the warm climate and the large proportion of the state that is dry grasslands used for agriculture. (1) **
+**Texas has the largest amount of wildfires caused by powerlines.  This is possibly due to the warm climate and the large proportion of the state that is dry grasslands used for agriculture. (3) **
 
-(1) https://uk.reuters.com/article/us-wildfires-texas/trees-and-power-lines-caused-major-texas-fire-idUSTRE78J76A20110920
+(3) https://uk.reuters.com/article/us-wildfires-texas/trees-and-power-lines-caused-major-texas-fire-idUSTRE78J76A20110920
 
+
+<br>
 
 ### Wildfires caused by Railroad
 
@@ -577,6 +629,7 @@ cause("Railroad")
 
 **By far Florida has the most wildfires caused by railroads.  I find this rather strange and will do some further investigation.**
 
+<br>
 
 ### Wildfires caused by Smoking
 
@@ -586,6 +639,7 @@ cause("Smoking")
 
 **Fires caused by smoking seem to be spread around the country, but mainly on the east and west coasts.**
 
+<br>
 
 ### Wildfires caused by Structure
 
@@ -596,8 +650,11 @@ cause("Structure")
 **South Dakota has the largest proportion of fires caused by structures.**
 
 
+<br>
 
 #### Unsurprisingly the southern states seem to have more occurences of wildifre in general, no doubt due to the warmer climate at their latitudes leading to drier ground cover which acts as fuel.  Also the 1st and 3rd states with the highest number of fires are also the 2 largest States by size. However the 2nd highest State is Georgia, which although it is in the South of the country is only an average sized State.  Therefore to get a better picture of what is going on I'm going to look at the proportion of fires occuring by square mile by normalising the State size.
+
+<br>
 
 #### The `dataset` package also has the area in square miles of each state included in the `state.area` vector.
 
@@ -608,6 +665,8 @@ state.area
 ```{r}
 length(state.area)
 ```
+<br>
+
 
 #### Annoyingly it also only has 50 states not 52 so I will need to add in DC and PR back in.  
 
@@ -637,6 +696,7 @@ fires_states <- fires_small %>%
   left_join(state_list, by = "state")
 ```
 
+<br>
 
 ### Normalising States area sizes
 
@@ -649,7 +709,6 @@ fires_states %>%
 ```
 
 
-
 ```{r}
 fires_states %>%
   select(region, area) %>%
@@ -660,6 +719,8 @@ fires_states %>%
 ```
 
 #### This table shows Puerto Rico has the highest proportion of fires compared to its size, followed by New Jersey in the NE of the country and finally by the States in the SE of the country.
+
+<br>
 
 
 ```{r}
@@ -684,12 +745,16 @@ fires_states %>%
 **Puerto Rico is not shown on this map, but visually we can see the data for the other 51 entries, and the south eastern states still have the highest proportion of wildfires.  Interestingly New Jersey also shows has a hotspot in the NE of the country.**
 
 
+<br>
 
 
 ### Do causes change over time?
 
+<br>
 
 #### Splitting causes into 2 group for legibility. 
+
+<br>
 
 #### The first group is for directly man created fires.
 
@@ -712,8 +777,9 @@ fires_states %>%
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-**The 2 large peaks in Arson are obvious in 1999 and 2006. There was a large heatwave in 2006, but I'm not sure why this would result in an increase in arson.  Perhaps there wasn't an actual increase in the amount of arson, but it could have been due to the heatwave making the ground drier than normal creating extra fuel to aid the spread of fires that would have normally not resulted in a large scale fire.  This may also be the same reason that there is also another peak in 2006 for Equipment Use.  Arson however does look to be decreasing since 2006, as does children.  Other wise most of the other causes of wildfires seem to be reasonably stable.  Perhaps we shall try modelling arson and children related fires to see if we can identify a general trend.**
+**The 2 large peaks in Arson are obvious in 1999 and 2006. There was a large heatwave in 2006, but I'm not sure why this would result in an increase in arson.  Perhaps there wasn't an actual increase in the amount of arson, but it could have been due to the heatwave making the ground drier than normal creating extra fuel to aid the spread of fires that would have normally not resulted in a large scale fire.  This may also be the same reason that there is also another peak in 2006 for Equipment Use.  Arson however does look to be decreasing since 2006, as does children.  Other wise most of the other causes of wildfires seem to be reasonably stable.  I shall apply some linear modelling to see if there is any statistically significant trends present (see separate worksheet).**
 
+<br>
 
 #### And this one for natural occuring fires.
 
@@ -738,6 +804,8 @@ fires_states %>%
 ```
 
 **Similar peaks can be seen in Debris, Miscellaneous and lightning in the heatwave of 2006 that left the ground very dry.  There are peaks from 1997 to 2003 in debris, miscellaneous and lightening, but also a trough in missing/undefined, so this is likely to be due to more accurate classification of fires and not using the missing/undefined category as much.**
+
+<br>
 
 
 
@@ -901,6 +969,9 @@ fires_states %>%
 **Looking at these trends some interesting insights can be seen.  For the combined years data Florida stands out as having railroad as its main cause of wildfire, but from the above plots it can be seen that these railroad fires are only the main cause up to the 4 yearly period ending in 2003 and then the main cause changes to lightning until the end of the collection period in 2015.  Similarly arson seem reasonably popular in the southern states until 2007, when it no longer appears as the most common cause of wildfire.  This downward trend was also noted earlier in the overall causation plots for all states**
 
 
+<br>
+
+
 ### The railroad fires in Florida are quite interesting considering that other southern states have more woodland or open pastures that I thought would have been more suseptible to fire.  I'm going to try and more closely map railroad fires in Florida itself.
 
 
@@ -917,6 +988,7 @@ fires_states %>%
 
 **There is something not right with this data, it is extremely unlikely that all these fire are from railroads . So I'm going to check another random year in 1998.**
 
+<br>
 
 ```{r}
 fires_states %>%
@@ -931,6 +1003,7 @@ fires_states %>%
 
 **The same issue is present, there is definitely something wrong here.  Let's check some more years.**
 
+<br>
 
 ```{r}
 fires_states %>%
@@ -945,6 +1018,7 @@ fires_states %>%
 
 **Now that is much better, with a lot less fires occurring and all of them next to a railroad as you would expect.  Let's check another year.**
 
+<br>
 
 ```{r}
 fires_states %>%
@@ -959,11 +1033,12 @@ fires_states %>%
 
 **2015's data looks the same as 2008 and what I would expect for railroad fires, occurring next to rails and being few and far between!**
 
+<br>
 
 **Having used leaflet to plot all the Lat/long coordinates for the railroad fires in 1992, 1998, 2008 and 2015, I am doubtful of the validity of either the recorded classification of fire origin or the accuracy of the coordinates in the earlier years of the recording period.  The majority of plotted fires have been started many miles away from any railroad.  This is especially obvious for the 2 fires that occurred near Key West in 1992, which has no rail links anywhere near by only road.  The coordinates have been given to 5 decimal places, which allows a precision of 1.1 meters, so unless they have been entered into the database incorrectly I think it is probably far more likely that an incorrect cause descriptor may have been entered for a lot of fires in the earlier years.  This error seems to have been rectified in the later years of the dataset, as can be seen in the 2008 and 2015 data behaving as expected as above.**
 
 
-
+<br>
 
 
 ### Correlation between states and fire size
@@ -1003,9 +1078,9 @@ fires_states %>%
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-**From the plots we can see that the Western states have the most small fires and also the most large fires!  Not entirely the most helpful plots...**
+**From the plots we can see that the Western states have the most small fires and also the most large fires!  Not entirely the most helpful plots so I will not take this analysis further at this time...**
 
-
+<br>
 
 
 
@@ -1155,8 +1230,6 @@ fires_states %>%
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
+**The above plots are quite interesting.  The months of the year that have the most seems to widely change in certain state.  Mainly the east half of the country have the most fires in the Spring (Feb-May) and the western part of the country have the most fires later on in Summer and Fall (Jun-Oct).  There are however a few exceptions that can be seen in the 2004-2007 and 2008-2011 data Texas has the most fires in January.  Florida also mostly conformed to the East/West split with the majority of its worst months for fires taking place in March or April up until 2007, then the most common month moves later into June and July for the rest of the reporting period until 2015. This may have to due with main cause of fires in Florida changing from railroad to lightning related about the same time, as we noted earlier on when looking at causation.  As July is the main month for tropical storms and lightning in Florida this is a possible cause for the highest month becoming later in the year than before. (4)**
 
-
-**The above plots are quite interesting.  The months of the year that have the most seems to widely change in certain state.  Mainly the east half of the country have the most fires in the Spring (Feb-May) and the western part of the country have the most fires later on in Summer and Fall (Jun-Oct).  There are however a few exceptions that can be seen in the 2004-2007 and 2008-2011 data Texas has the most fires in January.  Florida also mostly conformed to the East/West split with the majority of its worst months for fires taking place in March or April up until 2007, then the most common month moves later into June and July for the rest of the reporting period until 2015. This may have to due with main cause of fires in Florida changing from railroad to lightning related about the same time, as we noted earlier on when looking at causation.  As July is the main month for tropical storms and lightning in Florida this is a possible cause for the highest month becoming later in the year than before. (2)**
-
-(2) https://www.weather.gov/mlb/fl_lightning_climo
+(4) https://www.weather.gov/mlb/fl_lightning_climo
