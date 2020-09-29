@@ -597,7 +597,7 @@ cause("Structure")
 
 
 
-#### Unsurprisingly the southern states seem to have more occurences of wildifre in general, no doubt due to the warmer climate at their latitudes leading to dryer ground cover which cab act as fuel.  Also the 1st and 3rd states with the highest number of fires are also the 2 largest States by size. However the 2nd highest State is Georgia, which although it is in the South of the country is only an average sized State.  Therefore to get a better picture of what is going on I'm going to look at the proportion of fires occuring by square mile by normalising the State size.
+#### Unsurprisingly the southern states seem to have more occurences of wildifre in general, no doubt due to the warmer climate at their latitudes leading to drier ground cover which acts as fuel.  Also the 1st and 3rd states with the highest number of fires are also the 2 largest States by size. However the 2nd highest State is Georgia, which although it is in the South of the country is only an average sized State.  Therefore to get a better picture of what is going on I'm going to look at the proportion of fires occuring by square mile by normalising the State size.
 
 #### The `dataset` package also has the area in square miles of each state included in the `state.area` vector.
 
@@ -682,6 +682,8 @@ fires_states %>%
 
 
 **Puerto Rico is not shown on this map, but visually we can see the data for the other 51 entries, and the south eastern states still have the highest proportion of wildfires.  Interestingly New Jersey also shows has a hotspot in the NE of the country.**
+
+
 
 
 ### Do causes change over time?
