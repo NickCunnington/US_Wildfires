@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "SARIMA models"
 output: html_notebook
 ---
 
@@ -16,6 +16,7 @@ library(tsibbledata)
 library(feasts)
 ```
 
+<br>
 
 
 ### In order to try and validate the model I will take out the last 4 years of data and train the model on the first 20 years only
@@ -27,7 +28,6 @@ monthly_train <- monthly %>%
 monthly_test <- monthly %>%
   filter(year_month >= "2012-01-01")
 ```
-
 
 
 ```{r}
@@ -51,7 +51,7 @@ pacf(log_monthly_train)
 
 **Definitely some repeating patterns in the lag plots which is likely to be some kind of seasonal variation.**
 
-
+<br>
 
 ```{r}
 # Using a Dickey-Fuller test to validate any stationarity.
@@ -62,7 +62,7 @@ adf.test(log_monthly_train)
 **Agrees with a p-value of 0.01 that the hypothesis of having some kind of repeating pattern is correct and the null hypothesis of being stationary is not proven.**
 
 
-
+<br>
 
 ```{r}
 # Decomposing the time series data to examine any seasonal trends
@@ -75,13 +75,15 @@ components
 
 **Definitely some seasonal trend in that data, but let's have a look at a plot to make sure**
 
+<br>
+
 ```{r}
 plot(components)
 ```
 
-
-
 **The repeating seasonal trends can be seen very clearly in this plot.**
+
+<br>
 
 
 ```{r}
@@ -96,12 +98,14 @@ fit_log_monthly
 
 **auto.arima has chosen the best model with the lowest BIC.**
 
+<br>
 
 ```{r}
 # Calculated Confidence Intervals
 
 confint(fit_log_monthly)
 ```
+<br>
 
 ### Now making forecasts for last 4 years
 
@@ -115,6 +119,8 @@ plot(forecast_log_monthly)
 ```
 
 **ARIMA seems to have only taken the seasonal variation into account and not any trend.**
+
+<br>
 
 
 ```{r}
@@ -152,6 +158,8 @@ log_monthly_test %>%
 
 
 **The SARIMA model works pretty well when compared with the actual last 4 years worth of data.  It clearly has understood the seasonal variation which is present and has predicted values with a reasonable accuracy. It still shows a double peak each year, which I assumed earlier when looking at the month of year data could be due to coinciding with school Spring and Summer breaks.  This model also does not support the hypothesis that there is a general increasing or decreasing trend of fires over the reporting period, so I am happy to accept that apart from local environmental, human interaction, climate or other external factors making some variations each year there doesn't seem to be any general trend present at all.**
+
+<br>
 
 
 ### Checking the accuracy of the model to real data.
@@ -207,6 +215,5 @@ mean_error / mean_fires
 ```
 
 **Using a absolute mean error method the SARIMA model only has calculated error of 0.19, which is a quite reasonable figure.**
-
 
 
