@@ -1157,7 +1157,4 @@ fires_states %>%
 
 **The above plots are quite interesting.  The months of the year that have the most seems to widely change in certain state.  Mainly the east half of the country have the most fires in the Spring (Feb-May) and the western part of the country have the most fires later on in Summer and Fall (Jun-Oct).  There are however a few exceptions that can be seen in the 2004-2007 and 2008-2011 data Texas has the most fires in January.  Florida also mostly conformed to the East/West split with the majority of its worst months for fires taking place in March or April up until 2007, then the most common month moves later into June and July for the rest of the reporting period until 2015. This may have to due with main cause of fires in Florida changing from railroad to lightning related about the same time, as we noted earlier on when looking at causation.  As July is the main month for tropical storms and lightning in Florida this is a possible cause for the highest month becoming later in the year than before. (2)**
 
-
 (2) https://www.weather.gov/mlb/fl_lightning_climo
-
-
