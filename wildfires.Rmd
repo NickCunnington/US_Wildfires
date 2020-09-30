@@ -137,7 +137,6 @@ fires_small %>%
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-
 **The are peaks around day 60-110 and a big peak around 180.**
 
 <br>
