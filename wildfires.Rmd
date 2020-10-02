@@ -31,7 +31,6 @@ library(leaflet)
 
 <br>
 
-
 ## 2. Creating some initial visualisations
 
 <br>
