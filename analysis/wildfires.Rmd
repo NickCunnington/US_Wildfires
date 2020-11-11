@@ -45,16 +45,20 @@ year_plot <- fires_small %>%
 year_plot %>%
   ggplot +
   aes(x = fire_year, y = num_fires) +
-  geom_point() +
+  geom_point(alpha = 0.5) +
   geom_line() +
   ylim(0, 120000) +
   ggtitle("Amount of fires per year 1992-2015\n") + 
   xlab("\nYear") +
   ylab("Number of Fires\n") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold")) +
+  theme(axis.title.x = element_text(size = 14)) +
+  theme(axis.title.y = element_text(size = 14))
 
 ```
+
+
 
 **There is a lot of variation in the data between years.  Visually it looks like a repeating pattern is occurring every 5 years or so with 4 peaks visible within this reporting period.  Having looked at the historic weather for that date range these peaks seems to coincide with recorded heatwaves in 2000, 2006 and 2011.(1)**
 
@@ -88,7 +92,9 @@ monthly %>%
   xlab("\nYear") +
   ylab("Number of Fires\n") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold")) +
+  theme(axis.title.x = element_text(size = 14)) +
+  theme(axis.title.y = element_text(size = 14))
 ```
 
 **Peaks are still shown to be occurring in the summers. The 2006 heatwave is especially visible.**
@@ -111,7 +117,9 @@ fires_small %>%
   xlab("\nYear") +
   ylab("Number of Fires\n") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold")) +
+  theme(axis.title.x = element_text(size = 14)) +
+  theme(axis.title.y = element_text(size = 14))
 ```
 
 **This shows a typical time series plot with a cyclic variation due to warmer weather in the summer time.**
@@ -133,7 +141,15 @@ fires_small %>%
   xlab("\nDay of Year") +
   ylab("Number of Fires\n") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 17, face = "bold")) +
+  theme(axis.title.x = element_text(size = 14)) +
+  theme(axis.title.y = element_text(size = 14)) +
+  theme(axis.text = element_text(size = 12))
+```
+
+
+```{r}
+ggsave("day_of_year.png", width = 10, height = 6)
 ```
 
 **The are peaks around day 60-110 and a big peak around 180.**
@@ -167,8 +183,12 @@ fires_small %>%
   xlab("\nMonth of Year") +
   ylab("Number of Fires\n") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold")) +
+  theme(axis.title.x = element_text(size = 14)) +
+  theme(axis.title.y = element_text(size = 14)) +
+  theme(axis.text = element_text(size = 12))
 ```
+
 
 **There are 2 definite peaks during the year.  March and April are possibly due to the US "Spring Break", where schools and Universities are stopped and so families are likely to be on vacation during that period possibly visiting National Parks.  July and August is also Summer Break for school with both families visiting Parks and hot weather likely causes of fire outbreaks (3).  I will have a look at the data and see if there is anything related to vacation time that could corroborate this.**
 
@@ -188,7 +208,7 @@ mar_apr_causes <- fires_small %>%
 
 ```{r}
 may_june_causes <- fires_small %>%
-  dpfilter(discovery_moy == "May" | discovery_moy == "June") %>%
+  dplyr::filter(discovery_moy == "May" | discovery_moy == "June") %>%
   group_by(stat_cause_descr) %>%
   summarise(num_fires_may_june = n()) %>%
   arrange(desc(num_fires_may_june))
@@ -224,7 +244,9 @@ fires_small %>%
   xlab("Cause of fire\n") +
   ylab("\nNumber of Fires") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold")) +
+  theme(axis.title.x = element_text(size = 14)) +
+  theme(axis.title.y = element_text(size = 14))
   
 ```
 
@@ -244,7 +266,9 @@ fires_small %>%
   xlab("Cause of fire\n") +
   ylab("\nSize of fire (Square Miles)") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold")) +
+  theme(axis.title.x = element_text(size = 14)) +
+  theme(axis.title.y = element_text(size = 14))
 ```
 
 <br>
@@ -283,7 +307,9 @@ fires_small %>%
   xlab("\nFire Size Classification") +
   ylab("Number of Fires\n") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5)) 
+  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold")) +
+  theme(axis.title.x = element_text(size = 14)) +
+  theme(axis.title.y = element_text(size = 14))
   
 
 ```
@@ -430,7 +456,9 @@ fires_joined %>%
     theme_map() + 
     coord_map("mollweide") +  
     ggtitle("Total US Wildfires from 1992-2015") + 
-    theme(plot.title = element_text(hjust = 0.5))
+    theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+    theme(legend.title = element_text(size = 14)) +
+    theme(legend.text = element_text(size = 12))
 ```
 
 <br>
@@ -500,7 +528,9 @@ cause <- function(cause) {
     theme_map() + 
     coord_map("mollweide") + 
     ggtitle(paste0("Total US Wildfires caused by ", cause, " from 1992-2015")) + 
-    theme(plot.title = element_text(hjust = 0.5))
+    theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+    theme(legend.title = element_text(size = 14)) +
+    theme(legend.text = element_text(size = 12))
 }
 ```
 
@@ -513,6 +543,7 @@ cause <- function(cause) {
 cause("Arson")
 ```
 
+
 **Arson does seem more prevalent in the SE states of Mississippi, Georgia, Alabama and also the western state of California.**
 
 <br>
@@ -523,6 +554,7 @@ cause("Arson")
 ```{r}
 cause("Campfire")
 ```
+
 
 **Campfires are the most prevalent in the Western states of Oregon, California and Arizona.**
 
@@ -535,6 +567,7 @@ cause("Campfire")
 cause("Children")
 ```
 
+
 **Fires by children are spread about the country, but the most prevalent states are California in the West, Alabama and South Carolina and New Jersey in the east.**
 
 <br>
@@ -546,6 +579,7 @@ cause("Children")
 cause("Debris Burning")
 ```
 
+
 **Fires by burning debris are mostly in the southern warmer states of Texas, Georgia and North Carolina.**
 
 <br>
@@ -556,6 +590,8 @@ cause("Debris Burning")
 ```{r}
 cause("Equipment Use")
 ```
+
+
 **Most of the fires caused by equipment seem to be in California**
 
 <br>
@@ -566,6 +602,7 @@ cause("Equipment Use")
 ```{r}
 cause("Fireworks")
 ```
+
 
 **Most of the fires caused by fireworks seem to be in the north of the country.  Primarily South Dakota, Montana and Washington state.**
 
@@ -579,6 +616,7 @@ cause("Fireworks")
 cause("Lightning")
 ```
 
+
 **Apart from a hotspot of lightning strikes in Florida, the vast majority of fires caused by lightning are in the West of the country.  With the 3 most affected states being California, Oregon and Arizona.**
 
 <br>
@@ -589,6 +627,7 @@ cause("Lightning")
 ```{r}
 cause("Miscellaneous")
 ```
+
 
 **There seems to be quite a few miscellaneous classifications in California, Texas and New York.**
 
@@ -612,6 +651,7 @@ cause("Missing/Undefined")
 cause("Powerline")
 ```
 
+
 **Texas has the largest amount of wildfires caused by powerlines.  This is possibly due to the warm climate and the large proportion of the state that is dry grasslands used for agriculture. (3) **
 
 (3) https://uk.reuters.com/article/us-wildfires-texas/trees-and-power-lines-caused-major-texas-fire-idUSTRE78J76A20110920
@@ -624,6 +664,7 @@ cause("Powerline")
 ```{r}
 cause("Railroad")
 ```
+
 
 **By far Florida has the most wildfires caused by railroads.  I find this rather strange and will do some further investigation.**
 
@@ -644,6 +685,7 @@ cause("Smoking")
 ```{r}
 cause("Structure")
 ```
+
 
 **South Dakota has the largest proportion of fires caused by structures.**
 
@@ -736,7 +778,9 @@ fires_states %>%
   theme_map() + 
   coord_map("mollweide") + 
   ggtitle(paste0("Total US Wildfires per Square Mile from 1992-2015")) + 
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 
@@ -772,8 +816,13 @@ fires_states %>%
   ylab("Number of Fires\n") +
   labs(colour = "Cause of fire") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold")) +
+  theme(axis.title.x = element_text(size = 14)) +
+  theme(axis.title.y = element_text(size = 14)) +
+  theme(legend.title = element_text(size = 12)) +
+  theme(legend.text = element_text(size = 12))
 ```
+
 
 **The 2 large peaks in Arson are obvious in 1999 and 2006. There was a large heatwave in 2006, but I'm not sure why this would result in an increase in arson.  Perhaps there wasn't an actual increase in the amount of arson, but it could have been due to the heatwave making the ground drier than normal creating extra fuel to aid the spread of fires that would have normally not resulted in a large scale fire.  This may also be the same reason that there is also another peak in 2006 for Equipment Use.  Arson however does look to be decreasing since 2006, as does children.  Other wise most of the other causes of wildfires seem to be reasonably stable.  I shall apply some linear modelling to see if there is any statistically significant trends present (see separate worksheet).**
 
@@ -798,7 +847,11 @@ fires_states %>%
   ylab("Number of Fires\n") +
   labs(colour = "Cause of fire") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold")) +
+  theme(axis.title.x = element_text(size = 14)) +
+  theme(axis.title.y = element_text(size = 14)) +
+  theme(legend.title = element_text(size = 12)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 **Similar peaks can be seen in Debris, Miscellaneous and lightning in the heatwave of 2006 that left the ground very dry.  There are peaks from 1997 to 2003 in debris, miscellaneous and lightening, but also a trough in missing/undefined, so this is likely to be due to more accurate classification of fires and not using the missing/undefined category as much.**
@@ -839,7 +892,9 @@ fires_states %>%
   theme_map() + 
   scale_fill_brewer(name = "Cause of Fires", palette = "PuBuGn") +
   ggtitle("Total US Wildfires main cause from 1992-1995") + 
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 
@@ -863,7 +918,9 @@ fires_states %>%
   theme_map() + 
   scale_fill_brewer(name = "Cause of Fires", palette = "PuBuGn") +
   ggtitle("Total US Wildfires main cause from 1996-1999") + 
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 
@@ -887,7 +944,9 @@ fires_states %>%
   theme_map() + 
   scale_fill_brewer(name = "Cause of Fires", palette = "PuBuGn") +
   ggtitle("Total US Wildfires main cause from 2000-2003") + 
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 
@@ -911,7 +970,9 @@ fires_states %>%
   theme_map() + 
   scale_fill_brewer(name = "Cause of Fires", palette = "PuBuGn") +
   ggtitle("Total US Wildfires main cause from 2004-2007") + 
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 
@@ -936,7 +997,9 @@ fires_states %>%
   theme_map() + 
   scale_fill_brewer(name = "Cause of Fires", palette = "PuBuGn") +
   ggtitle("Total US Wildfires main cause from 2008-2011") + 
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 
@@ -961,7 +1024,9 @@ fires_states %>%
   theme_map() + 
   scale_fill_brewer(name = "Cause of Fires", palette = "PuBuGn") +
   ggtitle("Total US Wildfires main cause from 2012-2015") + 
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 **Looking at these trends some interesting insights can be seen.  For the combined years data Florida stands out as having railroad as its main cause of wildfire, but from the above plots it can be seen that these railroad fires are only the main cause up to the 4 yearly period ending in 2003 and then the main cause changes to lightning until the end of the collection period in 2015.  Similarly arson seem reasonably popular in the southern states until 2007, when it no longer appears as the most common cause of wildfire.  This downward trend was also noted earlier in the overall causation plots for all states**
@@ -1055,7 +1120,9 @@ fires_states %>%
   theme_map() +
   scale_fill_brewer(name = "Fire Size Class", palette = "PuBuGn") +
   ggtitle("Most common wildfire size per State 1992-2015") +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 
@@ -1073,7 +1140,9 @@ fires_states %>%
   theme_map() +
   scale_fill_distiller(name = "Number of Fires", palette = "PuBuGn") +
   ggtitle("Number of large class G fires per State 1992-2015") +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 **From the plots we can see that the Western states have the most small fires and also the most large fires!  Not entirely the most helpful plots so I will not take this analysis further at this time...**
@@ -1099,7 +1168,9 @@ fires_states %>%
   theme_map() +
   scale_fill_brewer(name = "Months of Year", palette = "PuBuGn") +
   ggtitle("Months with most fires per State 1992-2015") +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 
@@ -1119,10 +1190,15 @@ fires_states %>%
   theme_map() +
   scale_fill_brewer(name = "Months of Year", palette = "PuBuGn") +
   ggtitle("Month with most fires per State 1992-1995") +
-  theme(plot.title = element_text(hjust = 0.5)) 
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
   # theme(legend.position = "left")
 ```
 
+```{r}
+ggsave("month_92_95.png", height = 5, width = 8)
+```
 
 
 ```{r}
@@ -1141,7 +1217,9 @@ fires_states %>%
   theme_map() +
   scale_fill_brewer(name = "Months of Year", palette = "PuBuGn") +
   ggtitle("Month with most fires per State 1996-1999") +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 
@@ -1162,7 +1240,9 @@ fires_states %>%
   theme_map() +
   scale_fill_brewer(name = "Months of Year", palette = "PuBuGn") +
   ggtitle("Month with most fires per State 2000-2003") +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 
@@ -1183,7 +1263,9 @@ fires_states %>%
   theme_map() +
   scale_fill_brewer(name = "Months of Year", palette = "PuBuGn") +
   ggtitle("Month with most fires per State 2004-2007") +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 
@@ -1204,7 +1286,9 @@ fires_states %>%
   theme_map() +
   scale_fill_brewer(name = "Months of Year", palette = "PuBuGn") +
   ggtitle("Month with most fires per State 2008-2011") +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 
@@ -1225,7 +1309,9 @@ fires_states %>%
   theme_map() +
   scale_fill_brewer(name = "Months of Year", palette = "PuBuGn") +
   ggtitle("Month with most fires per State 2012-2015") +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  theme(legend.title = element_text(size = 14)) +
+  theme(legend.text = element_text(size = 12))
 ```
 
 **The above plots are quite interesting.  The months of the year that have the most seems to widely change in certain state.  Mainly the east half of the country have the most fires in the Spring (Feb-May) and the western part of the country have the most fires later on in Summer and Fall (Jun-Oct).  There are however a few exceptions that can be seen in the 2004-2007 and 2008-2011 data Texas has the most fires in January.  Florida also mostly conformed to the East/West split with the majority of its worst months for fires taking place in March or April up until 2007, then the most common month moves later into June and July for the rest of the reporting period until 2015. This may have to due with main cause of fires in Florida changing from railroad to lightning related about the same time, as we noted earlier on when looking at causation.  As July is the main month for tropical storms and lightning in Florida this is a possible cause for the highest month becoming later in the year than before. (4)**
