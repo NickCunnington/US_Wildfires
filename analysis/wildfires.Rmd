@@ -147,11 +147,6 @@ fires_small %>%
   theme(axis.text = element_text(size = 12))
 ```
 
-
-```{r}
-ggsave("day_of_year.png", width = 10, height = 6)
-```
-
 **The are peaks around day 60-110 and a big peak around 180.**
 
 <br>
@@ -456,10 +451,11 @@ fires_joined %>%
     theme_map() + 
     coord_map("mollweide") +  
     ggtitle("Total US Wildfires from 1992-2015") + 
-    theme(plot.title = element_text(hjust = 0.5, size = 20)) +
-    theme(legend.title = element_text(size = 14)) +
+    theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold")) +
+    theme(legend.title = element_text(size = 13)) +
     theme(legend.text = element_text(size = 12))
 ```
+
 
 <br>
 
@@ -528,8 +524,8 @@ cause <- function(cause) {
     theme_map() + 
     coord_map("mollweide") + 
     ggtitle(paste0("Total US Wildfires caused by ", cause, " from 1992-2015")) + 
-    theme(plot.title = element_text(hjust = 0.5, size = 20)) +
-    theme(legend.title = element_text(size = 14)) +
+    theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold")) +
+    theme(legend.title = element_text(size = 13)) +
     theme(legend.text = element_text(size = 12))
 }
 ```
@@ -567,7 +563,6 @@ cause("Campfire")
 cause("Children")
 ```
 
-
 **Fires by children are spread about the country, but the most prevalent states are California in the West, Alabama and South Carolina and New Jersey in the east.**
 
 <br>
@@ -590,7 +585,6 @@ cause("Debris Burning")
 ```{r}
 cause("Equipment Use")
 ```
-
 
 **Most of the fires caused by equipment seem to be in California**
 
@@ -616,7 +610,6 @@ cause("Fireworks")
 cause("Lightning")
 ```
 
-
 **Apart from a hotspot of lightning strikes in Florida, the vast majority of fires caused by lightning are in the West of the country.  With the 3 most affected states being California, Oregon and Arizona.**
 
 <br>
@@ -627,7 +620,6 @@ cause("Lightning")
 ```{r}
 cause("Miscellaneous")
 ```
-
 
 **There seems to be quite a few miscellaneous classifications in California, Texas and New York.**
 
@@ -650,7 +642,6 @@ cause("Missing/Undefined")
 ```{r}
 cause("Powerline")
 ```
-
 
 **Texas has the largest amount of wildfires caused by powerlines.  This is possibly due to the warm climate and the large proportion of the state that is dry grasslands used for agriculture. (3) **
 
@@ -685,7 +676,6 @@ cause("Smoking")
 ```{r}
 cause("Structure")
 ```
-
 
 **South Dakota has the largest proportion of fires caused by structures.**
 
@@ -1168,10 +1158,15 @@ fires_states %>%
   theme_map() +
   scale_fill_brewer(name = "Months of Year", palette = "PuBuGn") +
   ggtitle("Months with most fires per State 1992-2015") +
-  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
-  theme(legend.title = element_text(size = 14)) +
+  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold")) +
+  theme(legend.title = element_text(size = 13)) +
   theme(legend.text = element_text(size = 12))
 ```
+
+```{r}
+ggsave("months.png", width = 10, height = 6)
+```
+
 
 
 ```{r}

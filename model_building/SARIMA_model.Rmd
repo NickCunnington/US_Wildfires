@@ -152,8 +152,14 @@ log_monthly_test %>%
   ggtitle("Predicted (Red) vs Actual (Black) fires per month (2012 - 2015)\n") + 
   labs(x = "\nYear", y = "Number of Fires\n") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold")) +
+  theme(axis.title.x = element_text(size = 14)) +
+  theme(axis.title.y = element_text(size = 14))
   
+```
+
+```{r}
+ggsave("sarima.png", width = 10, height = 6)
 ```
 
 
