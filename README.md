@@ -6,7 +6,6 @@
 
 <br>
 
-
 ## Aims of the project
 
 During this project I investigated all 1.88 million recorded wildfires that occured in the United States from 1992-2015 in order to examine the causes and explore any correlations that may be present.
