@@ -1,5 +1,6 @@
 # Study of Wildfires in the US for the years 1992-2015.
 
+
 <br>
 
 ![Intro](https://github.com/NickCunnington/final_project_nick/blob/master/plots/wildfires.PNG)
